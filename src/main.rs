@@ -19,18 +19,21 @@ fn main() {
             .short(Cmd::NEW.short)
             .long(Cmd::NEW.name)
             .help(Cmd::NEW.desc)
+            .multiple(true)
         )
         .subcommand(SubCommand::with_name(Cmd::NEW.name)
             .about(Cmd::NEW.desc)
-            .arg_from_usage("-l, --list 'lists test values'")
+            .arg(Arg::with_name("params")
+                .multiple(true)
+            )
         )
         .get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches(Cmd::NEW.name) {
-        if matches.is_present("list") {
-            println!("Printing testing lists...");
-        } else {
-            println!("Not printing testing lists...");
+        if let Some(arg) = matches.args.get("params") {
+            for val in arg.vals.iter() {
+                println!("val: {:?}", val);
+            }
         }
     }
 }
