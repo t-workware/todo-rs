@@ -1,0 +1,8 @@
+[package]
+name = "todo"
+version = "0.1.0"   # Related with VERSION const in main.rs
+authors = ["XX <freecoder.xx@gmail.com>"]
+
+[dependencies]
+clap = "2.31"
+config = "0.8"
