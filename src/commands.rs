@@ -9,7 +9,7 @@ pub struct Cmd {
 macro_rules! commands {
     ($($const_name:ident [$name:ident, -$short:ident, --$long:ident] - $desc:tt),*) => {
         impl Cmd {
-            $(pub const $const_name: Cmd = Cmd { name: stringify!($name), short: stringify!($short), desc: stringify!($desc) };)*
+            $(pub const $const_name: Cmd = Cmd { name: stringify!($name), short: stringify!($short), desc: $desc };)*
         }
     };
 }
