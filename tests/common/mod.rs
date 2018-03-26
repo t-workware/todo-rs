@@ -58,11 +58,12 @@ macro_rules! create_file {
 pub fn split_args(line: &str) -> Vec<String> {
     let mut args = vec![];
     let mut start = 0;
-    let mut open_bch = 0_u8;
-    for (index, bch) in line.as_bytes().iter().enumerate() {
-        match *bch {
+    let mut quote_bch = 0;
+
+    for (index, &bch) in line.as_bytes().iter().enumerate() {
+        match bch {
             b' ' | b'\t' | b'\n' | b'\r' => {
-                if open_bch == 0 {
+                if quote_bch == 0 {
                     let arg = String::from_utf8_lossy(&line.as_bytes()[start..index]).to_string();
                     if !arg.is_empty() {
                         args.push(arg);
@@ -71,10 +72,10 @@ pub fn split_args(line: &str) -> Vec<String> {
                 }
             },
             b'"' | b'\'' => {
-                if open_bch == 0 {
-                    open_bch = *bch;
-                } else if open_bch == *bch {
-                    open_bch = 0;
+                if quote_bch == 0 {
+                    quote_bch = bch;
+                } else if quote_bch == bch {
+                    quote_bch = 0;
                 }
             },
             _ => ()
