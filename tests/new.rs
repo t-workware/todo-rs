@@ -1,3 +1,5 @@
+#[macro_use]
+mod common;
 
 #[test]
 fn create_new_task() {
@@ -33,24 +35,6 @@ file = "todo.seq"
         "todo --new task1" => "tasks/new/B.2.task1.md",
         "todo -n task1" => "tasks/new/B.3.task1.md"
     );
-
-    assert_create_file!(
-        [
-            "todo new --top A --scope cur --id ID --ext txt --name \"task 1\"",
-            "todo new --top A scope:cur id:ID ext:txt \"task 1\"",
-            "todo new --top A scope:cur i:ID e:txt n:\"task 1\"",
-            "todo new t:A s:cur i:ID e:txt \"task 1\"",
-            "todo --new top:A scope:cur id:ID ext:txt name:\"task 1\"",
-            "todo --new top:A scope:cur id:ID ext:txt \"task 1\"",
-            "todo --new top:A scope:cur i:ID e:txt n:\"task 1\"",
-            "todo --new t:A s:cur i:ID e:txt \"task 1\"",
-            "todo -n top:A scope:cur id:ID ext:txt name:\"task 1\"",
-            "todo -n top:A scope:cur id:ID ext:txt \"task 1\"",
-            "todo -n --top A --scope cur -I ID -E txt -N \"task 1\"",
-            "todo -n -T A -S cur -I ID -E txt \"task 1\""
-        ] => "tasks/cur/A.ID.task\\ 1.txt"
-    );
-
     assert_create_file!(
         [
             "todo new top:A scope:cur id:ID ext:txt name:\"task 1\"",
@@ -67,8 +51,26 @@ file = "todo.seq"
             "todo -n t:A s:cur i:ID e:txt \"task 1\""
         ] => "tasks/cur/A.ID.task\\ 1.txt"
     );
+
     assert_create_file!(
-        "todo -n top:C s:"" n:task e:txt" => "tasks/C.4.task.txt",
-        "todo new t:C s:"" task" => "tasks/C.5.task.md",
+        "todo -n top:C s:\"\" n:task e:txt" => "tasks/C.4.task.txt",
+        "todo new t:C s:\"\" task" => "tasks/C.5.task.md"
     );
+
+//    assert_create_file!(
+//        [
+//            "todo new --top A --scope cur --id ID --ext txt --name \"task 1\"",
+//            "todo new --top A scope:cur id:ID ext:txt \"task 1\"",
+//            "todo new --top A scope:cur i:ID e:txt n:\"task 1\"",
+//            "todo new t:A s:cur i:ID e:txt \"task 1\"",
+//            "todo --new top:A scope:cur id:ID ext:txt name:\"task 1\"",
+//            "todo --new top:A scope:cur id:ID ext:txt \"task 1\"",
+//            "todo --new top:A scope:cur i:ID e:txt n:\"task 1\"",
+//            "todo --new t:A s:cur i:ID e:txt \"task 1\"",
+//            "todo -n top:A scope:cur id:ID ext:txt name:\"task 1\"",
+//            "todo -n top:A scope:cur id:ID ext:txt \"task 1\"",
+//            "todo -n --top A --scope cur -I ID -E txt -N \"task 1\"",
+//            "todo -n -T A -S cur -I ID -E txt \"task 1\""
+//        ] => "tasks/cur/A.ID.task\\ 1.txt"
+//    );
 }
