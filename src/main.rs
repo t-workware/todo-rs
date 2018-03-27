@@ -2,11 +2,12 @@ extern crate clap;
 extern crate config;
 
 use clap::{Arg, App, SubCommand};
-use types::Str;
-use commands::Cmd;
+use types::{Str, OsStrX};
+use cmd::Cmd;
 
+mod todo;
 mod types;
-mod commands;
+mod cmd;
 
 // Related with `version` value in Cargo.toml
 const VERSION: Str = "0.1.0";
@@ -30,9 +31,10 @@ fn main() {
         .get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches(Cmd::NEW.name) {
-        if let Some(arg) = matches.args.get("params") {
-            for val in arg.vals.iter() {
-                println!("val: {:?}", val);
+        if let Some(params_arg) = matches.args.get("params") {
+            for param in params_arg.vals.iter() {
+                let (key, value) = param.split_at_byte(b':');
+                println!("param: {:?}, ({:?}, {:?})", param, key, value);
             }
         }
     }
