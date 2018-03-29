@@ -1,9 +1,13 @@
 extern crate clap;
 extern crate config;
+#[macro_use]
+extern crate failure;
 
 use clap::{Arg, App, SubCommand};
 use types::{Str, OsStrX};
 use cmd::Cmd;
+use todo::command::{Command, New};
+use todo::command::store::fs::Create;
 
 mod todo;
 mod types;
@@ -32,11 +36,14 @@ fn main() {
         .get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches(Cmd::NEW.name) {
+        let mut new_command = New::new(Create { ext: None });
         if let Some(params_arg) = matches.args.get(PARAMS_ARG_NAME) {
             for param in params_arg.vals.iter() {
                 let (key, value) = param.split_at_byte(PARAM_SEPARATOR);
+                new_command.set_param(key.as_str(), value.as_str().to_string()).unwrap();
                 println!("param: {:?}, ({:?}, {:?})", param, key, value);
             }
         }
+        println!("command: {:?}", new_command);
     }
 }
