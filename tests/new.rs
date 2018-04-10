@@ -12,14 +12,12 @@ fn create_new_task() {
     );
 
     create_file!("todo.toml", r#"
-[issue]
+[store.fs]
 dir = "tasks"
-format = "{scope}/{priority}.{id}.{name}.{ext}"
+format = "{scope:/}{top:.}{id:.}{name}{.:ext}"
+ext = "md"
 
-[issue.default]
-ext = ".md"
-
-[default.new]
+[command.new]
 scope = "new"
 top = "B"
 id = { generator = "sequence" }
