@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 use todo::error::TodoError;
 use todo::command::{Command, New};
 use todo::command::store::Create as CanCreate;
@@ -23,13 +24,16 @@ impl Command for Create {
     }
 
     fn exec(&mut self) {
-        if let Some(ref dir) = self.dir {
-            fs::create_dir_all(dir).expect(&format!("Can't create dir: {}", dir));
-        }
-        if let Some(ref path) = self.path {
-            fs::File::open(path).expect_err(&format!("File {} already exist", path));
-            fs::File::create(path).expect(&format!("Creation error with path: {}", path));
-            println!("create {}", path);
+        if let Some(ref str_path) = self.path {
+            let path = Path::new(str_path);
+
+            fs::File::open(path).expect_err(&format!("File {} already exist", str_path));
+            if let Some(dir) = path.parent() {
+                fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
+            }
+            fs::File::create(path).expect(&format!("Creation error with path: {}", str_path));
+
+            println!("create {}", str_path);
         }
     }
 }
