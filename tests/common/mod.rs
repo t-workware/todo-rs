@@ -14,23 +14,28 @@ macro_rules! assert_create_file {
                 use ::std::fs::{File, remove_file};
                 use ::std::process::Command;
 
-                let path = target_path!($path);
                 let args = ::common::split_args($command);
 
-                assert!(File::open(path).is_err());
+                assert!(File::open($path).is_err(),
+                    format!("File `{}` already exist", $path)
+                );
 
                 let cmd = &args[0];
                 let mut cmd = Command::new(target_path!(cmd));
-                for arg in args[0..].iter() {
+                for arg in args[1..].iter() {
                     cmd.arg(&arg);
                 }
-                cmd.output().expect(&format!("Failed execute command `{}`", $command));
+                println!("command: {:?}", cmd);
+                let output = cmd.output().expect(&format!("Failed execute command `{}`", $command));
+                println!("{}", output.status);
+                println!("{}", String::from_utf8_lossy(&output.stdout));
+                println!("{}", String::from_utf8_lossy(&output.stderr));
 
-                assert!(File::open(path).is_ok(),
-                    format!("Command `{}` did not create file `{}`", $command, path)
+                assert!(File::open($path).is_ok(),
+                    format!("Command `{}` did not create file `{}`", $command, $path)
                 );
 
-                remove_file(path).unwrap();
+                remove_file($path).unwrap();
             }
         )*)*
     };
@@ -80,6 +85,10 @@ pub fn split_args(line: &str) -> Vec<String> {
             },
             _ => ()
         }
+    }
+    let arg = String::from_utf8_lossy(&line.as_bytes()[start..]).to_string();
+    if !arg.is_empty() {
+        args.push(arg);
     }
     args
 }
