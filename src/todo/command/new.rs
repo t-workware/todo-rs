@@ -45,6 +45,7 @@ impl<T> Command for New<T>
                 "top" | "t" => self.top = Some(Top(value)),
                 "scope" | "s" => self.scope = Some(Scope(value)),
                 "id" | "i" => self.id = Some(Id(value)),
+                "name" | "n" => self.name = Some(value),
                 _ if self.create.is_some() => self.create.as_mut().unwrap().set_param(key, value)?,
                 _ => ()
             }

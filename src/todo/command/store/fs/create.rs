@@ -27,7 +27,7 @@ impl Command for Create {
         if let Some(ref str_path) = self.path {
             let path = Path::new(str_path);
 
-            fs::File::open(path).expect_err(&format!("File {} already exist", str_path));
+            fs::File::open(path).expect_err(&format!("File {} already exists", str_path));
             if let Some(dir) = path.parent() {
                 fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
             }
