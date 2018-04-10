@@ -86,7 +86,9 @@ pub fn split_args(line: &str) -> Vec<String> {
             _ => ()
         }
     }
-    let arg = String::from_utf8_lossy(&line.as_bytes()[start..]).to_string();
+    let arg = String::from_utf8_lossy(&line.as_bytes()[start..])
+        .to_string()
+        .replace("\"", "");
     if !arg.is_empty() {
         args.push(arg);
     }
