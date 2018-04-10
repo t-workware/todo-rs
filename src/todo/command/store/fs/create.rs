@@ -27,6 +27,7 @@ impl Command for Create {
             fs::create_dir_all(dir).expect(&format!("Can't create dir: {}", dir));
         }
         if let Some(ref path) = self.path {
+            fs::File::open(path).expect_err(&format!("File {} already exist", path));
             fs::File::create(path).expect(&format!("Creation error with path: {}", path));
             println!("create {}", path);
         }
