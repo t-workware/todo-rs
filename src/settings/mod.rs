@@ -105,10 +105,12 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> Result<Self, Error> {
-        let settings = Settings::default();
+        let config_file_name = env::var("TODO_CONFIG_FILE_NAME")
+            .unwrap_or("todo.toml".to_string());
 
-        let config_file_name = "settings.toml";
-        let mut config = Config::try_from(&settings)?;
+        let mut config = Config::new();
+
+        config.merge(Config::try_from(&Settings::default())?)?;
 
         if let Ok(home) = env::var("TODO_HOME") {
             config.merge(
@@ -117,11 +119,11 @@ impl Settings {
             )?;
         }
 
-        config.merge(File::with_name(config_file_name).required(false))?;
+        config.merge(File::with_name(&config_file_name).required(false))?;
 
         // Add in settings from the environment (with a prefix of TODO)
-        // Eg.. `TODO_DEBUG=1 ./target/todo` would set the `debug` key
-        config.merge(Environment::with_prefix("TODO"))?;
+        // Eg.. `TODO_SET_DEBUG=1 ./target/todo` would set the `debug` key
+        config.merge(Environment::with_prefix("TODO_SET"))?;
 
         let settings = config.try_into()?;
         Ok(settings)

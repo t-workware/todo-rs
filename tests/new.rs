@@ -1,6 +1,8 @@
 #[macro_use]
 mod common;
 
+use std::env;
+
 #[test]
 fn create_new_task() {
     assert_create_file!(
@@ -26,6 +28,7 @@ id = { generator = "sequence" }
 file = "target/test_new/todo.seq"
 "#
     );
+    env::set_var("TODO_CONFIG_FILE_NAME", "target/test_new/todo.toml");
     create_file!("target/test_new/todo.seq", "1");
 
     assert_create_file!(
