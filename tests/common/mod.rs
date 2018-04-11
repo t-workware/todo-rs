@@ -71,14 +71,18 @@ pub fn split_args(line: &str) -> Vec<String> {
     let mut start = 0;
     let mut quote_bch = 0;
 
+    let push_arg = |args: &mut Vec<_>, slice| {
+        let arg = String::from_utf8_lossy(slice).to_string().replace("\"", "");
+        if !arg.is_empty() {
+            args.push(arg);
+        }
+    };
+
     for (index, &bch) in line.as_bytes().iter().enumerate() {
         match bch {
             b' ' | b'\t' | b'\n' | b'\r' => {
                 if quote_bch == 0 {
-                    let arg = String::from_utf8_lossy(&line.as_bytes()[start..index]).to_string();
-                    if !arg.is_empty() {
-                        args.push(arg);
-                    }
+                    push_arg(&mut args, &line.as_bytes()[start..index]);
                     start = index + 1;
                 }
             },
@@ -92,11 +96,6 @@ pub fn split_args(line: &str) -> Vec<String> {
             _ => ()
         }
     }
-    let arg = String::from_utf8_lossy(&line.as_bytes()[start..])
-        .to_string()
-        .replace("\"", "");
-    if !arg.is_empty() {
-        args.push(arg);
-    }
+    push_arg(&mut args, &line.as_bytes()[start..]);
     args
 }
