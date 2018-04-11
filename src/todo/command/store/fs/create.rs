@@ -58,6 +58,7 @@ trait Format {
     fn find_from_pos(&self, pos: usize, needle: &str) -> Option<usize>;
     fn find_byte(&self, start: usize, needle: u8) -> Option<usize>;
     fn rfind_byte(&self, end: usize, needle: u8) -> Option<usize>;
+    fn key_replace_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)>;
     fn key_replace(&mut self, key: &str, value: &str);
 }
 
@@ -99,45 +100,67 @@ impl Format for String {
         None
     }
 
+    fn key_replace_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)> {
+        let (mut start, mut end) = (0, 0);
+        let mut found = false;
+
+        let index = key_pos;
+        if index > 0 && index + key_len < self.len() {
+            if self.as_bytes()[index - 1] == b'{' {
+                start = index - 1;
+                found = true;
+            } else if index > 1 && self.as_bytes()[index - 1] == b':' {
+                if let Some(start_index) = self.rfind_byte(index - 1, b'{') {
+                    start = start_index;
+                    found = true;
+                }
+            }
+        }
+
+        if found {
+            found = false;
+            let index = index + key_len - 1;
+
+            if self.as_bytes()[index + 1] == b'}' {
+                end = index + 1;
+                found = true;
+            } else if index + 2 < self.as_bytes().len() && self.as_bytes()[index + 1] == b':' {
+                if let Some(end_index) = self.find_byte(index + 2, b'}') {
+                    end = end_index;
+                    found = true;
+                }
+            }
+        }
+
+        if found {
+            Some((start, end))
+        } else {
+            None
+        }
+    }
+
     fn key_replace(&mut self, key: &str, value: &str) {
         let mut find_pos = 0;
 
         while let Some(index) = self.find_from_pos(find_pos, key) {
             find_pos = index + 1;
 
-            if index > 0 && index + key.len() < self.as_bytes().len() {
-                let (mut before, mut after) = ("".to_string(), "".to_string());
-                let (start, end);
-
-                if self.as_bytes()[index - 1] == b'{' {
-                    start = index - 1;
-                } else if index > 1 && self.as_bytes()[index - 1] == b':' {
-                    if let Some(start_index) = self.rfind_byte(index - 1, b'{') {
-                        start = start_index;
-                        before = String::from_utf8_lossy(&self.as_bytes()[(start_index + 1)..(index - 1)]).to_string();
-                    } else {
-                        continue;
-                    }
+            if let Some((start, end)) = self.key_replace_pos(index, key.len()) {
+                let before = if start + 1 < index - 1 {
+                    String::from_utf8_lossy(&self.as_bytes()[(start + 1)..(index - 1)]).to_string()
                 } else {
-                    continue;
-                }
+                    "".to_string()
+                };
 
-                let index = index + key.len() - 1;
-                if self.as_bytes()[index + 1] == b'}' {
-                    end = index + 1;
-                } else if index + 2 < self.as_bytes().len() && self.as_bytes()[index + 1] == b':' {
-                    if let Some(end_index) = self.find_byte(index + 2, b'}') {
-                        end = end_index;
-                        after = String::from_utf8_lossy(&self.as_bytes()[(index + 2)..end_index]).to_string();
-                    } else {
-                        continue;
-                    }
+                let after = if index + key.len() + 1 < end {
+                    String::from_utf8_lossy(&self.as_bytes()[(index + key.len() + 1)..end]).to_string()
                 } else {
-                    continue;
-                }
+                    "".to_string()
+                };
 
                 let head = String::from_utf8_lossy(&self.as_bytes()[..start]).to_string();
                 let tail = String::from_utf8_lossy(&self.as_bytes()[(end + 1)..]).to_string();
+
                 let body = if !value.is_empty() {
                     format!("{}{}{}", before, value, after)
                 } else {
