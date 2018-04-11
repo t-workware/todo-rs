@@ -10,6 +10,11 @@ macro_rules! target_path {
 macro_rules! assert_create_file {
     ($([$($command:tt),*] => $path:tt),*) => {
         $($(
+            assert_create_file!($command => $path);
+        )*)*
+    };
+    ($($command:tt => $path:tt),*) => {
+        $(
             {
                 use ::std::fs::{File, remove_file};
                 use ::std::process::Command;
@@ -37,10 +42,7 @@ macro_rules! assert_create_file {
 
                 remove_file($path).unwrap();
             }
-        )*)*
-    };
-    ($($command:tt => $path:tt),*) => {
-
+        )*
     };
 }
 
@@ -48,14 +50,18 @@ macro_rules! assert_create_file {
 macro_rules! create_file {
     ($path:tt, $content:tt) => {
         {
-            use ::std::fs::File;
+            use ::std::fs;
             use ::std::io::Write;
+            use ::std::path::Path;
 
-            let path = target_path!($path);
-            let mut file = File::create(path)
-                .expect(&format!("File: {} can not create.", path));
+            let path = Path::new($path);
+            if let Some(dir) = path.parent() {
+                fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
+            }
+            let mut file = fs::File::create(path)
+                .expect(&format!("File: {:?} can not create.", path));
             file.write_all($content.as_bytes())
-                .expect(&format!("File: {} wrong content write.", path));
+                .expect(&format!("File: {:?} wrong content write.", path));
         }
     };
 }

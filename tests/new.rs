@@ -11,9 +11,9 @@ fn create_new_task() {
         ] => "issues/task1.md"
     );
 
-    create_file!("todo.toml", r#"
+    create_file!("target/test_new/todo.toml", r#"
 [store.fs]
-dir = "tasks"
+dir = "target/test_new/tasks"
 format = "{scope:/}{top:.}{id:.}{name}{.:ext}"
 ext = "md"
 
@@ -23,15 +23,15 @@ top = "B"
 id = { generator = "sequence" }
 
 [generator.sequence]
-file = "todo.seq"
+file = "target/test_new/todo.seq"
 "#
     );
-    create_file!("todo.seq", "1");
+    create_file!("target/test_new/todo.seq", "1");
 
     assert_create_file!(
-        "todo new task1" => "tasks/new/B.1.task1.md",
-        "todo --new task1" => "tasks/new/B.2.task1.md",
-        "todo -n task1" => "tasks/new/B.3.task1.md"
+        "todo new task1" => "target/test_new/tasks/new/B.1.task1.md",
+        "todo --new task1" => "target/test_new/tasks/new/B.2.task1.md",
+        "todo -n task1" => "target/test_new/tasks/new/B.3.task1.md"
     );
     assert_create_file!(
         [
@@ -47,11 +47,11 @@ file = "todo.seq"
             "todo -n top:A scope:cur id:ID ext:txt \"task 1\"",
             "todo -n top:A scope:cur i:ID e:txt n:\"task 1\"",
             "todo -n t:A s:cur i:ID e:txt \"task 1\""
-        ] => "tasks/cur/A.ID.task\\ 1.txt"
+        ] => "target/test_new/tasks/cur/A.ID.task\\ 1.txt"
     );
 
     assert_create_file!(
-        "todo -n top:C s:\"\" n:task e:txt" => "tasks/C.4.task.txt",
-        "todo new t:C s:\"\" task" => "tasks/C.5.task.md"
+        "todo -n top:C s:\"\" n:task e:txt" => "target/test_new/tasks/C.4.task.txt",
+        "todo new t:C s:\"\" task" => "target/test_new/tasks/C.5.task.md"
     );
 }
