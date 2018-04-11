@@ -9,9 +9,10 @@ use types::Str;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FsStore {
-    pub dir: String,
     pub format: String,
+    pub dir: String,
     pub ext: String,
+    pub id_generator: String,
 }
 
 impl Default for FsStore {
@@ -20,6 +21,7 @@ impl Default for FsStore {
             format: "{scope:/}{top:.}{id:.}{name}{.:ext}".to_string(),
             dir: "issues".to_string(),
             ext: "md".to_string(),
+            id_generator: String::default()
         }
     }
 }
@@ -35,38 +37,13 @@ pub struct Store {
     pub mongo: MongoStore,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Id {
-    pub generator: String,
-}
-
-impl Id {
-    const GENERATOR_SEQUENCE: Str = "sequence";
-}
-
-impl Default for Id {
-    fn default() -> Self {
-        Id {
-            generator: Id::GENERATOR_SEQUENCE.to_string()
-        }
-    }
-}
-
-//
-//#[derive(Clone, Debug, Serialize, Deserialize)]
-//pub enum IdGenerator {
-//    Sequence
-//}
-//
-//impl Default for IdGenerator {
-//    fn default() -> Self {
-//        IdGenerator::Sequence
-//    }
-//}
-
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Generator {
     pub sequence: SequenceGenerator
+}
+
+impl Generator {
+    const SEQUENCE: Str = "sequence";
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -86,7 +63,7 @@ impl Default for SequenceGenerator {
 pub struct NewCommand {
     pub scope: String,
     pub top: String,
-    pub id: Id,
+    pub id: String,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

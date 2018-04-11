@@ -1,5 +1,7 @@
 use std::fs;
 use std::path::Path;
+use std::io::{Read, Write};
+use failure::Error;
 use todo::error::TodoError;
 use todo::command::{Command, New};
 use todo::command::store::Create as CanCreate;
@@ -10,7 +12,8 @@ pub struct Create {
     pub format: Option<String>,
     pub dir: Option<String>,
     pub ext: Option<String>,
-    pub path: Option<String>
+    pub path: Option<String>,
+    pub id_generator: Option<SequenceGenerator>,
 }
 
 impl Command for Create {
@@ -42,7 +45,18 @@ impl CanCreate for Create {
     fn init_from(&mut self, new: &New<Self>) {
         let mut format = map_str(&self.format, String::as_str).to_string();
 
-        format.key_replace("id", map_str(&new.id,|id| id.0.as_str()));
+        let mut id = new.id.as_ref().map(|id| id.0.clone()).unwrap_or_default();
+
+        if let Some(ref generator) = self.id_generator {
+            let id_found = format.find("id")
+                .and_then(|pos| format.key_replaceable_pos(pos, "id".len()))
+                .is_some();
+            if id_found && new.id.is_none() {
+                id = generator.next().expect("Generate next id fail");
+            }
+        }
+
+        format.key_replace("id", id.as_str());
         format.key_replace("top", map_str(&new.top,|top| top.0.as_str()));
         format.key_replace("scope", map_str(&new.scope,|scope| scope.0.as_str()));
         format.key_replace("name", map_str(&new.name,|name| name.as_str()));
@@ -58,7 +72,7 @@ trait Format {
     fn find_from_pos(&self, pos: usize, needle: &str) -> Option<usize>;
     fn find_byte(&self, start: usize, needle: u8) -> Option<usize>;
     fn rfind_byte(&self, end: usize, needle: u8) -> Option<usize>;
-    fn key_replace_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)>;
+    fn key_replaceable_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)>;
     fn key_replace(&mut self, key: &str, value: &str);
 }
 
@@ -100,7 +114,7 @@ impl Format for String {
         None
     }
 
-    fn key_replace_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)> {
+    fn key_replaceable_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)> {
         let (mut start, mut end) = (0, 0);
         let mut found = false;
 
@@ -145,7 +159,7 @@ impl Format for String {
         while let Some(index) = self.find_from_pos(find_pos, key) {
             find_pos = index + 1;
 
-            if let Some((start, end)) = self.key_replace_pos(index, key.len()) {
+            if let Some((start, end)) = self.key_replaceable_pos(index, key.len()) {
                 let before = if start + 1 < index - 1 {
                     String::from_utf8_lossy(&self.as_bytes()[(start + 1)..(index - 1)]).to_string()
                 } else {
@@ -170,6 +184,33 @@ impl Format for String {
                 find_pos = head.len() + body.len() + tail.len();
                 *self = format!("{}{}{}", head, body, tail);
             }
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SequenceGenerator {
+    pub file: Option<String>,
+}
+
+impl SequenceGenerator {
+    pub fn next(&self) -> Result<String, Error> {
+        match self.file {
+            Some(ref path) => {
+                let id = {
+                    let mut contents = String::new();
+                    let mut file = fs::File::open(path)?;
+                    file.read_to_string(&mut contents)?;
+                    contents
+                };
+                let new_id = format!("{}", id.parse::<u64>()? + 1);
+
+                let mut file = fs::File::create(path)?;
+                file.write_all(new_id.as_bytes())?;
+
+                Ok(id)
+            },
+            None => Err(TodoError::FileNotSpecified.into())
         }
     }
 }

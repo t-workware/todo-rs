@@ -18,11 +18,11 @@ fn create_new_task() {
 dir = "target/test_new/tasks"
 format = "{scope:/}{top:.}{id:.}{name}{.:ext}"
 ext = "md"
+id_generator = "sequence"
 
 [command.new]
 scope = "new"
 top = "B"
-id = { generator = "sequence" }
 
 [generator.sequence]
 file = "target/test_new/todo.seq"
@@ -50,7 +50,7 @@ file = "target/test_new/todo.seq"
             "todo -n top:A scope:cur id:ID ext:txt \"task 1\"",
             "todo -n top:A scope:cur i:ID e:txt n:\"task 1\"",
             "todo -n t:A s:cur i:ID e:txt \"task 1\""
-        ] => "target/test_new/tasks/cur/A.ID.task\\ 1.txt"
+        ] => "target/test_new/tasks/cur/A.ID.task 1.txt"
     );
 
     assert_create_file!(

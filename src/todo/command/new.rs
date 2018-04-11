@@ -21,8 +21,8 @@ pub struct New<T>
     pub create: Option<T>,
     pub top: Option<Top>,
     pub scope: Option<Scope>,
+    pub name: Option<String>,
     pub id: Option<Id>,
-    pub name: Option<String>
 }
 
 impl<T> New<T>
