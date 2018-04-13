@@ -1,5 +1,6 @@
 use settings::{Settings, Generator};
-use todo::command::{New, Top, Scope, List, store::fs, store::Create};
+use todo::command::{New, List, store::fs, store::Create};
+use todo::issue::{Top, Scope};
 
 pub trait Setup {
     fn setup(self, settings: &Settings) -> Self;
@@ -27,8 +28,8 @@ impl<T> Setup for New<T>
     where T: Create
 {
     fn setup(mut self, settings: &Settings) -> Self {
-        self.top = Some(Top(settings.command.new.top.clone()));
-        self.scope = Some(Scope(settings.command.new.scope.clone()));
+        self.issue.top = Some(Top(settings.command.new.top.clone()));
+        self.issue.scope = Some(Scope(settings.command.new.scope.clone()));
         self
     }
 }

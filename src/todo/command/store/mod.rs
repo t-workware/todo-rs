@@ -1,8 +1,9 @@
 pub mod fs;
 pub mod mongo;
 
-use todo::command::{Command, New};
+use todo::command::Command;
+use todo::issue::{Content, Issue};
 
 pub trait Create: Command {
-    fn init_from(&mut self, new: &New<Self>) where Self: Sized;
+    fn init_from<T: Content>(&mut self, issue: &Issue<T>);
 }

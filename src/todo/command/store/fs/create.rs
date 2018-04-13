@@ -3,8 +3,9 @@ use std::path::Path;
 use std::io::{Read, Write};
 use failure::Error;
 use todo::error::TodoError;
-use todo::command::{Command, New};
+use todo::command::Command;
 use todo::command::store::Create as CanCreate;
+use todo::issue::{Content, Issue};
 use todo::tools::map_str;
 
 #[derive(Clone, Debug, Default)]
@@ -42,24 +43,24 @@ impl Command for Create {
 }
 
 impl CanCreate for Create {
-    fn init_from(&mut self, new: &New<Self>) {
+    fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
         let mut format = map_str(&self.format, String::as_str).to_string();
 
-        let mut id = new.id.as_ref().map(|id| id.0.clone()).unwrap_or_default();
+        let mut id = issue.id.as_ref().map(|id| id.0.clone()).unwrap_or_default();
 
         if let Some(ref generator) = self.id_generator {
             let id_found = format.find("id")
                 .and_then(|pos| format.key_replaceable_pos(pos, "id".len()))
                 .is_some();
-            if id_found && new.id.is_none() {
+            if id_found && issue.id.is_none() {
                 id = generator.next().expect("Generate next id fail");
             }
         }
 
         format.key_replace("id", id.as_str());
-        format.key_replace("top", map_str(&new.top,|top| top.0.as_str()));
-        format.key_replace("scope", map_str(&new.scope,|scope| scope.0.as_str()));
-        format.key_replace("name", map_str(&new.name,|name| name.as_str()));
+        format.key_replace("top", map_str(&issue.top,|top| top.0.as_str()));
+        format.key_replace("scope", map_str(&issue.scope,|scope| scope.0.as_str()));
+        format.key_replace("name", map_str(&issue.name,|name| name.as_str()));
         format.key_replace("ext", map_str(&self.ext,|ext| ext.as_str()));
 
         if let Some(ref dir) = self.dir {
