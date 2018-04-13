@@ -38,8 +38,8 @@ impl OsStrX for OsStr {
             }
         }
         (
+            OsStr::new(""),
             &*self,
-            OsStr::from_bytes(&bytes[bytes.len()..bytes.len()]),
         )
     }
 }

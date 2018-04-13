@@ -67,7 +67,7 @@ fn cmd_new_process(matches: &ArgMatches, name: &str, settings: &Settings) {
         ).setup(&settings);
 
         for param in params_arg.vals.iter() {
-            let (key, value) = param.split_at_byte(PARAM_SEPARATOR);
+            let (mut key, mut value) = param.split_at_byte(PARAM_SEPARATOR);
             cmd_new.set_param(key.as_str(), value.as_str().to_string()).unwrap();
             println!("param: {:?}, ({:?}, {:?})", param, key, value);
         }
