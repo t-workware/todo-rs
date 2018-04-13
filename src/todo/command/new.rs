@@ -31,7 +31,10 @@ impl<T> New<T>
     pub fn new(create_command: T) -> New<T> {
         New {
             create: Some(create_command),
-            ..New::default()
+            top: None,
+            scope: None,
+            name: None,
+            id: None,
         }
     }
 }

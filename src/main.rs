@@ -6,12 +6,10 @@ extern crate serde_derive;
 #[macro_use]
 extern crate failure;
 
-use clap::{App, Arg, ArgMatches, SubCommand};
-use types::{Str, OsStrX};
+use clap::{App, Arg, SubCommand};
+use types::Str;
 use cmd::Cmd;
-use todo::command::{Command, New};
-use todo::command::store::fs::Create;
-use settings::{Settings, Setup};
+use settings::Settings;
 
 mod todo;
 mod types;
@@ -52,25 +50,10 @@ fn main() {
         .get_matches();
 
     if matches.is_present(Cmd::NEW.name) {
-        cmd_new_process(&matches, Cmd::NEW.name, &settings);
+        Cmd::NEW.process(&matches, Cmd::NEW.name, &settings).unwrap();
     }
 
     if let Some(matches) = matches.subcommand_matches(Cmd::NEW.name) {
-        cmd_new_process(matches, PARAMS_ARG_NAME, &settings);
-    }
-}
-
-fn cmd_new_process(matches: &ArgMatches, name: &str, settings: &Settings) {
-    if let Some(params_arg) = matches.args.get(name) {
-        let mut cmd_new = New::new(
-            Create::default().setup(settings)
-        ).setup(&settings);
-
-        for param in params_arg.vals.iter() {
-            let (mut key, mut value) = param.split_at_byte(PARAM_SEPARATOR);
-            cmd_new.set_param(key.as_str(), value.as_str().to_string()).unwrap();
-            println!("param: {:?}, ({:?}, {:?})", param, key, value);
-        }
-        cmd_new.exec();
+        Cmd::NEW.process(matches, PARAMS_ARG_NAME, &settings).unwrap();
     }
 }
