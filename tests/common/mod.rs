@@ -7,6 +7,34 @@ macro_rules! target_path {
 }
 
 #[macro_export]
+macro_rules! delete_file {
+    ($path:tt) => {
+        ::std::fs::remove_file($path)
+            .expect(&format!("File: {} can not delete.", $path));
+    };
+}
+
+#[macro_export]
+macro_rules! create_file {
+    ($path:tt, $content:tt) => {
+        {
+            use ::std::fs;
+            use ::std::io::Write;
+            use ::std::path::Path;
+
+            let path = Path::new($path);
+            if let Some(dir) = path.parent() {
+                fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
+            }
+            let mut file = fs::File::create(path)
+                .expect(&format!("File: {:?} can not create.", path));
+            file.write_all($content.as_bytes())
+                .expect(&format!("File: {:?} wrong content write.", path));
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! assert_create_file {
     ($([$($command:tt),*] => $path:tt),*) => {
         $($(
@@ -16,7 +44,7 @@ macro_rules! assert_create_file {
     ($($command:tt => $path:tt),*) => {
         $(
             {
-                use ::std::fs::{File, remove_file};
+                use ::std::fs::File;
                 use ::std::process::Command;
 
                 let args = ::common::split_args($command);
@@ -40,29 +68,41 @@ macro_rules! assert_create_file {
                     format!("Command `{}` did not create file `{}`", $command, $path)
                 );
 
-                remove_file($path).unwrap();
+                delete_file!($path);
             }
         )*
     };
 }
 
 #[macro_export]
-macro_rules! create_file {
-    ($path:tt, $content:tt) => {
-        {
-            use ::std::fs;
-            use ::std::io::Write;
-            use ::std::path::Path;
+macro_rules! assert_output {
+    ($([$($command:tt),*] => $out:tt),*) => {
+        $($(
+            assert_create_file!($command => $out);
+        )*)*
+    };
+    ($($command:tt => $out:tt),*) => {
+        $(
+            {
+                use ::std::fs::{File, remove_file};
+                use ::std::process::Command;
 
-            let path = Path::new($path);
-            if let Some(dir) = path.parent() {
-                fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
+                let args = ::common::split_args($command);
+                let cmd = &args[0];
+                let mut cmd = Command::new(target_path!(cmd));
+                for arg in args[1..].iter() {
+                    cmd.arg(&arg);
+                }
+                println!("command: {:?}", cmd);
+                let output = cmd.output().expect(&format!("Failed execute command `{}`", $command));
+                println!("{}", output.status);
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                println!("{}", stdout);
+                println!("{}", String::from_utf8_lossy(&output.stderr));
+
+                assert_eq!($out, stdout);
             }
-            let mut file = fs::File::create(path)
-                .expect(&format!("File: {:?} can not create.", path));
-            file.write_all($content.as_bytes())
-                .expect(&format!("File: {:?} wrong content write.", path));
-        }
+        )*
     };
 }
 
