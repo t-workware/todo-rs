@@ -37,7 +37,7 @@ impl Command for Create {
             }
             fs::File::create(path).expect(&format!("Creation error with path: {}", str_path));
 
-            println!("create {}", str_path);
+            println!("{}", str_path);
         }
     }
 }
@@ -202,7 +202,7 @@ impl SequenceGenerator {
                     let mut contents = String::new();
                     let mut file = fs::File::open(path)?;
                     file.read_to_string(&mut contents)?;
-                    contents
+                    contents.trim().to_string()
                 };
                 let new_id = format!("{}", id.parse::<u64>()? + 1);
 
