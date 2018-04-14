@@ -78,13 +78,12 @@ macro_rules! assert_create_file {
 macro_rules! assert_output {
     ($([$($command:tt),*] => $out:tt),*) => {
         $($(
-            assert_create_file!($command => $out);
+            assert_output!($command => $out);
         )*)*
     };
     ($($command:tt => $out:tt),*) => {
         $(
             {
-                use ::std::fs::{File, remove_file};
                 use ::std::process::Command;
 
                 let args = ::common::split_args($command);
@@ -100,7 +99,7 @@ macro_rules! assert_output {
                 println!("{}", stdout);
                 println!("{}", String::from_utf8_lossy(&output.stderr));
 
-                assert_eq!($out, stdout);
+                assert_eq!($out, stdout.trim_right());
             }
         )*
     };

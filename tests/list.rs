@@ -1,10 +1,8 @@
 #[macro_use]
 mod common;
 
-use std::env;
-
 #[test]
-fn create_new_task() {
+fn list_issues() {
     create_file!("target/test_list/issues/task1.md", "");
 
     assert_output!(

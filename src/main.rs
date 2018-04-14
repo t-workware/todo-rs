@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate failure;
+extern crate walkdir;
 
 use clap::{App, Arg, SubCommand};
 use types::Str;
@@ -40,20 +41,32 @@ fn main() {
             .takes_value(true)
             .multiple(true)
         )
+        .subcommand(SubCommand::with_name(Cmd::LIST.name)
+            .about(Cmd::LIST.desc)
+            .arg(Arg::with_name(PARAMS_ARG_NAME)
+                .multiple(true)
+            )
+        )
         .arg(Arg::with_name(Cmd::LIST.name)
             .short(Cmd::LIST.short)
             .long(Cmd::LIST.name)
             .help(Cmd::LIST.desc)
             .takes_value(true)
+            .default_value("all")
             .multiple(true)
         )
         .get_matches();
 
-    if matches.is_present(Cmd::NEW.name) {
-        Cmd::NEW.process(&matches, Cmd::NEW.name, &settings).unwrap();
-    }
-
     if let Some(matches) = matches.subcommand_matches(Cmd::NEW.name) {
         Cmd::NEW.process(matches, PARAMS_ARG_NAME, &settings).unwrap();
+    } else if let Some(matches) = matches.subcommand_matches(Cmd::LIST.name) {
+        Cmd::LIST.process(matches, PARAMS_ARG_NAME, &settings).unwrap();
+    } else {
+        if matches.is_present(Cmd::NEW.name) {
+            Cmd::NEW.process(&matches, Cmd::NEW.name, &settings).unwrap();
+        }
+        if matches.is_present(Cmd::LIST.name) {
+            Cmd::LIST.process(&matches, Cmd::LIST.name, &settings).unwrap();
+        }
     }
 }

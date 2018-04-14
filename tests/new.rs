@@ -4,7 +4,7 @@ mod common;
 use std::env;
 
 #[test]
-fn create_new_task() {
+fn create_new_issue() {
     assert_create_file!(
         [
             "todo new task1",

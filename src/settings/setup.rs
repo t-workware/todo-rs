@@ -1,5 +1,5 @@
 use settings::{Settings, Generator};
-use todo::command::{New, List, store::fs, store::Create};
+use todo::command::{New, List, store::{fs, Create, Find}};
 use todo::issue::{Top, Scope};
 
 pub trait Setup {
@@ -24,6 +24,13 @@ impl Setup for fs::Create {
     }
 }
 
+impl Setup for fs::Find {
+    fn setup(mut self, settings: &Settings) -> Self {
+        self.dir = settings.store.fs.dir.clone();
+        self
+    }
+}
+
 impl<T> Setup for New<T>
     where T: Create
 {
@@ -35,9 +42,9 @@ impl<T> Setup for New<T>
 }
 
 impl<T> Setup for List<T>
-    where T: Create
+    where T: Find
 {
-    fn setup(mut self, settings: &Settings) -> Self {
+    fn setup(self, _settings: &Settings) -> Self {
         self
     }
 }
