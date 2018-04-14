@@ -62,10 +62,10 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches(Cmd::LIST.name) {
         Cmd::LIST.process(matches, PARAMS_ARG_NAME, &settings).unwrap();
     } else {
-        if matches.is_present(Cmd::NEW.name) {
+        if matches.occurrences_of(Cmd::NEW.name) > 0 {
             Cmd::NEW.process(&matches, Cmd::NEW.name, &settings).unwrap();
         }
-        if matches.is_present(Cmd::LIST.name) {
+        if matches.occurrences_of(Cmd::LIST.name) > 0 {
             Cmd::LIST.process(&matches, Cmd::LIST.name, &settings).unwrap();
         }
     }

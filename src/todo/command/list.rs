@@ -43,7 +43,6 @@ impl<T> Command for List<T>
     fn exec(&mut self) {
         let mut find = mem::replace(&mut self.find, None)
             .expect("Find command not exist");
-//        search.init_from(&self);
         find.exec();
         self.find = Some(find);
     }
