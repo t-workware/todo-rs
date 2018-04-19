@@ -99,7 +99,12 @@ macro_rules! assert_output {
                 println!("{}", stdout);
                 println!("{}", String::from_utf8_lossy(&output.stderr));
 
-                assert_eq!($out, stdout.trim_right());
+                let outs: Vec<_> = $out.trim().split("\n").collect();
+                let stdouts: Vec<_> = stdout.trim().split("\n").collect();
+
+                for out in outs.iter() {
+                    assert!(stdouts.contains(out), "`{}` is not in {:?}", out, stdouts);
+                }
             }
         )*
     };
