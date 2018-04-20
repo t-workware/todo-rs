@@ -4,6 +4,7 @@ version = "0.1.0"   # Related with VERSION const in main.rs
 authors = ["XX <freecoder.xx@gmail.com>"]
 
 [dependencies]
+regex = "0.2"
 clap = "2.31"
 config = { git = "https://github.com/limbo-rs/config-rs" }
 serde = "1.0"

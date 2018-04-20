@@ -1,8 +1,12 @@
 #[macro_use]
 mod common;
 
+use std::env;
+
 #[test]
 fn list_issues() {
+    env::set_var("TODO_HOME", "./");
+
     create_file!("target/test_list/issues/task1.md", "");
 
     assert_output!(

@@ -5,6 +5,8 @@ use std::env;
 
 #[test]
 fn create_new_issue() {
+    env::set_var("TODO_HOME", "./");
+
     assert_create_file!(
         [
             "todo new task1",
@@ -25,6 +27,7 @@ scope = "new"
 top = "B"
 
 [generator.sequence]
+required = true
 file = "target/test_new/todo.seq"
 "#
     );

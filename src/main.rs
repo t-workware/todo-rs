@@ -1,3 +1,4 @@
+extern crate regex;
 extern crate clap;
 extern crate config;
 extern crate serde;
@@ -52,7 +53,7 @@ fn main() {
             .long(Cmd::LIST.name)
             .help(Cmd::LIST.desc)
             .takes_value(true)
-            .default_value("all")
+            .default_value(".*")
             .multiple(true)
         )
         .get_matches();

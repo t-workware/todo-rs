@@ -10,7 +10,6 @@ pub struct List<T>
     where T: Find
 {
     pub find: Option<T>,
-    pub filter: Option<String>,
 }
 
 impl<T> List<T>
@@ -19,7 +18,6 @@ impl<T> List<T>
     pub fn new(find_command: T) -> List<T> {
         List {
             find: Some(find_command),
-            filter: None,
         }
     }
 }
@@ -30,12 +28,13 @@ impl<T> Command for List<T>
     fn set_param(&mut self, key: &str, value: String) -> Result<(), TodoError> {
         if !key.is_empty() {
             match key.to_lowercase().as_str() {
-                "filter" | "f" => self.filter = Some(value),
                 _ if self.find.is_some() => self.find.as_mut().unwrap().set_param(key, value)?,
                 _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() })
             }
         } else {
-            self.filter = Some(value);
+            if let Some(find) = self.find.as_mut() {
+                find.set_param("filter", value)?;
+            }
         }
         Ok(())
     }
