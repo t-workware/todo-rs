@@ -45,8 +45,41 @@ target/test_list/issues/new/task2.md
         [
             "todo list task2",
             "todo --list task2",
-            "todo -l task2"
+            "todo -l task2",
+            "todo list .*2",
+            "todo --list .*2",
+            "todo -l .*2"
         ] => "target/test_list/issues/new/task2.md"
+    );
+
+    assert_output!(
+        [
+            "todo list .*3",
+            "todo --list .*3",
+            "todo -l .*3"
+        ] => ""
+    );
+
+    assert_output!(
+        [
+            "todo list task",
+            "todo --list task",
+            "todo -l task",
+            "todo list \\.md$",
+            "todo --list \\.md$",
+            "todo -l \\.md$"
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list ^task$",
+            "todo --list ^task$",
+            "todo -l ^task$"
+        ] => ""
     );
 
     delete_file!("target/test_list/issues/task1.md");
