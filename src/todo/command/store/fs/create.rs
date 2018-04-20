@@ -191,6 +191,7 @@ impl Format for String {
 
 #[derive(Clone, Debug, Default)]
 pub struct SequenceGenerator {
+    pub required: bool,
     pub file: Option<String>,
 }
 
@@ -200,9 +201,18 @@ impl SequenceGenerator {
             Some(ref path) => {
                 let id = {
                     let mut contents = String::new();
-                    let mut file = fs::File::open(path)?;
-                    file.read_to_string(&mut contents)?;
-                    contents.trim().to_string()
+                    let open = fs::File::open(path);
+                    match open {
+                        Ok(mut file) => {
+                            file.read_to_string(&mut contents)?;
+                            contents.trim().to_string()
+                        },
+                        Err(err) => return if self.required {
+                            Err(err.into())
+                        } else {
+                            Ok("".to_string())
+                        },
+                    }
                 };
                 let new_id = format!("{}", id.parse::<u64>()? + 1);
 
@@ -211,7 +221,8 @@ impl SequenceGenerator {
 
                 Ok(id)
             },
-            None => Err(TodoError::FileNotSpecified.into())
+            None if self.required => Err(TodoError::FileNotSpecified.into()),
+            _ => Ok("".to_string())
         }
     }
 }

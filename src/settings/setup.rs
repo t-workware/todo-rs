@@ -14,6 +14,7 @@ impl Setup for fs::Create {
         match settings.store.fs.id_generator.as_ref() {
             Generator::SEQUENCE => {
                 self.id_generator = Some(fs::SequenceGenerator {
+                    required: settings.generator.sequence.required,
                     file: Some(settings.generator.sequence.file.clone())
                 })
             },

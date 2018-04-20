@@ -48,12 +48,14 @@ impl Generator {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SequenceGenerator {
+    pub required: bool,
     pub file: String,
 }
 
 impl Default for SequenceGenerator {
     fn default() -> Self {
         SequenceGenerator {
+            required: false,
             file: "todo.seq".to_string()
         }
     }
