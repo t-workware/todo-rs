@@ -10,6 +10,7 @@ use types::Str;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FsStore {
     pub format: String,
+    pub find_all: bool,
     pub dir: String,
     pub ext: String,
     pub id_generator: String,
@@ -19,6 +20,7 @@ impl Default for FsStore {
     fn default() -> Self {
         FsStore {
             format: "{scope:/}{top:.}{id:.}{name}{.:ext}".to_string(),
+            find_all: false,
             dir: "issues".to_string(),
             ext: "md".to_string(),
             id_generator: String::default()

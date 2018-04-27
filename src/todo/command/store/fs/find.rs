@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::ffi::OsStr;
 use regex::Regex;
-use walkdir::WalkDir;
+use walkdir::{DirEntry, WalkDir};
 use failure::Error;
 use todo::command::Command;
 use todo::command::store::Find as CanFind;
@@ -11,18 +11,28 @@ use todo::error::TodoError;
 pub struct Find {
     pub format: Option<String>,
     pub filter: Option<Regex>,
+    pub all: bool,
     pub dir: String,
     pub exts: Option<Vec<String>>,
 }
 
 impl Find {
+    fn is_hidden(entry: &DirEntry) -> bool {
+        entry.file_name()
+            .to_str()
+            .map(|s| s.len() > 1 && s.starts_with("."))
+            .unwrap_or(false)
+    }
+
     pub fn walk_through_issues(&self, root: &Path) -> Result<(), Error> {
         let walker = WalkDir::new(root)
             .follow_links(true)
             .into_iter();
         let issues_dir = OsStr::new(&self.dir);
 
-        for entry in walker {
+        for entry in walker.filter_entry(|e|
+            self.all || !Find::is_hidden(e)
+        ) {
             let entry = entry?;
             if entry.file_type().is_file() {
                 for chunk in entry.path().iter() {
@@ -51,6 +61,8 @@ impl Command for Find {
         match key.to_lowercase().as_str() {
             "filter" | "f" => self.filter = Some(Regex::new(&value)
                 .expect(&format!("Invalid filter regular expression: {}", value))),
+            "all" | "a" => self.all = if ["false", "f", "no", "n", "0"]
+                .contains(&value.to_lowercase().as_str()) {false} else {true},
             "dir" | "d" => self.dir = value,
             _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() }),
         }

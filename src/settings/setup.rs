@@ -27,6 +27,7 @@ impl Setup for fs::Create {
 
 impl Setup for fs::Find {
     fn setup(mut self, settings: &Settings) -> Self {
+        self.all = settings.store.fs.find_all;
         self.dir = settings.store.fs.dir.clone();
         self
     }
