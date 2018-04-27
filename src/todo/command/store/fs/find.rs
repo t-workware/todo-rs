@@ -61,7 +61,7 @@ impl Command for Find {
         match key.to_lowercase().as_str() {
             "filter" | "f" => self.filter = Some(Regex::new(&value)
                 .expect(&format!("Invalid filter regular expression: {}", value))),
-            "all" | "a" => self.all = if ["false", "f", "no", "n", "0"]
+            "all" | "a" => self.all = if ["false", "f", "not", "no", "n", "0"]
                 .contains(&value.to_lowercase().as_str()) {false} else {true},
             "dir" | "d" => self.dir = value,
             _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() }),
