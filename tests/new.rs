@@ -18,13 +18,13 @@ fn create_new_issue() {
     create_file!("target/test_new/todo.toml", r#"
 [store.fs]
 dir = "target/test_new/tasks"
-format = "{scope:/}{top:.}{id:.}{name}{.:ext}"
+format = "{scope:/}{priority:.}{id:.}{name}{.:ext}"
 ext = "md"
 id_generator = "sequence"
 
-[command.new]
+[command.new.default_attrs]
 scope = "new"
-top = "B"
+priority = "B"
 
 [generator.sequence]
 required = true

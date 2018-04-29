@@ -2,6 +2,7 @@ use clap::ArgMatches;
 use failure::Error;
 use settings::{Settings, Setup};
 use todo::error::TodoError;
+use todo::issue::Issue;
 use todo::command::{Command, New, List};
 use todo::command::store::fs::{Create, Find};
 use types::{Str, OsStrX};
@@ -38,9 +39,10 @@ impl Cmd {
         let mut cmd: Box<Command>;
 
         if self.name == Cmd::NEW.name {
-            cmd = Box::new(New::new(
-                Create::default().setup(settings)
-            ).setup(&settings));
+            cmd = Box::new(New {
+                create: Some(Create::default().setup(settings)),
+                issue: Issue::<String>::default().setup(settings),
+            }.setup(&settings));
         } else if self.name == Cmd::LIST.name {
             cmd = Box::new(List::new(
                 Find::default().setup(settings)

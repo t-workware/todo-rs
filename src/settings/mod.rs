@@ -2,10 +2,48 @@ pub mod setup;
 pub use self::setup::*;
 
 use std::env;
+use std::collections::HashMap;
 use config::{Config, File, Environment};
 use failure::Error;
 
 use types::Str;
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct AttrName {
+    pub key: String,
+    pub aliases: Vec<String>,
+}
+
+impl AttrName {
+    pub fn new(key: &str, aliases: Vec<&str>) -> Self {
+        AttrName {
+            key: key.to_string(),
+            aliases: aliases.iter().map(|a| a.to_string()).collect()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Issue {
+    pub attrs: Vec<AttrName>,
+    pub id_attr_key: String,
+    pub default_attr_key: String,
+}
+
+impl Default for Issue {
+    fn default() -> Self {
+        Issue {
+            attrs: vec![
+                AttrName::new("id", vec!["i"]),
+                AttrName::new("priority", vec!["p", "top", "t"]),
+                AttrName::new("scope", vec!["s"]),
+                AttrName::new("name", vec!["n", "title"]),
+            ],
+            id_attr_key: "id".to_string(),
+            default_attr_key: "name".to_string(),
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FsStore {
@@ -19,7 +57,7 @@ pub struct FsStore {
 impl Default for FsStore {
     fn default() -> Self {
         FsStore {
-            format: "{scope:/}{top:.}{id:.}{name}{.:ext}".to_string(),
+            format: "{scope:/}{priority:.}{id:.}{name}{.:ext}".to_string(),
             find_all: false,
             dir: "issues".to_string(),
             ext: "md".to_string(),
@@ -65,9 +103,7 @@ impl Default for SequenceGenerator {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct NewCommand {
-    pub scope: String,
-    pub top: String,
-    pub id: String,
+    pub default_attrs: Option<HashMap<String, String>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -78,6 +114,7 @@ pub struct Command {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Settings {
     pub debug: bool,
+    pub issue: Issue,
     pub store: Store,
     pub command: Command,
     pub generator: Generator,

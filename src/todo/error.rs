@@ -8,6 +8,10 @@ pub enum TodoError {
     UnknownCommandParam {
         param: String,
     },
+    #[fail(display = "unknown attribute `{}`", attr)]
+    UnknownAttribute {
+        attr: String,
+    },
     #[fail(display = "file is not specified")]
     FileNotSpecified,
 }

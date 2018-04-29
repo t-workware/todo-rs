@@ -1,3 +1,5 @@
+use todo::attrs::Attrs;
+
 pub trait Content {
     fn content(&self) -> String;
 }
@@ -9,20 +11,14 @@ impl Content for String {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct Top(pub String);
-
-#[derive(Clone, Debug, Default)]
-pub struct Scope(pub String);
-
-#[derive(Clone, Debug, Default)]
-pub struct Id(pub String);
-
-
-#[derive(Clone, Debug, Default)]
 pub struct Issue<T: Content> {
-    pub id: Option<Id>,
-    pub top: Option<Top>,
-    pub scope: Option<Scope>,
-    pub name: Option<String>,
+    pub id_attr_key: String,
+    pub attrs: Attrs,
     pub content: Option<T>
+}
+
+impl<T: Content> Issue<T> {
+    pub fn get_id(&self) -> Option<&String> {
+        self.attrs.get_attr(&self.id_attr_key)
+    }
 }

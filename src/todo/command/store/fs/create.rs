@@ -46,22 +46,26 @@ impl CanCreate for Create {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
         let mut format = map_str(&self.format, String::as_str).to_string();
 
-        let mut id = issue.id.as_ref().map(|id| id.0.clone()).unwrap_or_default();
+        let mut id = issue.get_id().map(|id| id.clone()).unwrap_or_default();
 
         if let Some(ref generator) = self.id_generator {
-            let id_found = format.find("id")
-                .and_then(|pos| format.key_replaceable_pos(pos, "id".len()))
+            let id_found = format.find(&issue.id_attr_key)
+                .and_then(|pos| format.key_replaceable_pos(pos, issue.id_attr_key.len()))
                 .is_some();
-            if id_found && issue.id.is_none() {
+            if id_found && issue.get_id().is_none() {
                 id = generator.next().expect("Generate next id fail");
             }
         }
 
-        format.key_replace("id", id.as_str());
-        format.key_replace("top", map_str(&issue.top,|top| top.0.as_str()));
-        format.key_replace("scope", map_str(&issue.scope,|scope| scope.0.as_str()));
-        format.key_replace("name", map_str(&issue.name,|name| name.as_str()));
+        format.key_replace(&issue.id_attr_key, id.as_str());
         format.key_replace("ext", map_str(&self.ext,|ext| ext.as_str()));
+        for &(ref key, _) in issue.attrs.names() {
+            let key = key.as_str();
+            format.key_replace(key, map_str(
+                &issue.attrs.get_attr(key).map(|key| key.to_string()),
+                |value| value.as_str()
+            ));
+        }
 
         if let Some(ref dir) = self.dir {
             self.path = Some(format!("{}/{}", dir, format));
