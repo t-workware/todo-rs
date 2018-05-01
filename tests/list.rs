@@ -1,11 +1,12 @@
 #[macro_use]
 mod common;
 
-use std::env;
+use std::{env, fs};
 
 #[test]
 fn list_issues() {
     env::set_var("TODO_HOME", "./");
+    fs::remove_dir_all("target/test_list").unwrap();
 
     create_file!("target/test_list/issues/task1.md", "");
 

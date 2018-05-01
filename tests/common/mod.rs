@@ -35,23 +35,13 @@ macro_rules! create_file {
 }
 
 #[macro_export]
-macro_rules! assert_create_file {
-    ($([$($command:tt),*] => $path:tt),*) => {
-        $($(
-            assert_create_file!($command => $path);
-        )*)*
-    };
-    ($($command:tt => $path:tt),*) => {
+macro_rules! run {
+    ($($command:tt),*) => {
         $(
             {
-                use ::std::fs::File;
                 use ::std::process::Command;
 
                 let args = ::common::split_args($command);
-
-                assert!(File::open($path).is_err(),
-                    format!("File `{}` already exist", $path)
-                );
 
                 let cmd = &args[0];
                 let mut cmd = Command::new(target_path!(cmd));
@@ -63,6 +53,28 @@ macro_rules! assert_create_file {
                 println!("{}", output.status);
                 println!("{}", String::from_utf8_lossy(&output.stdout));
                 println!("{}", String::from_utf8_lossy(&output.stderr));
+            }
+        )*
+    };
+}
+
+#[macro_export]
+macro_rules! assert_create_file {
+    ($([$($command:tt),*] => $path:tt),*) => {
+        $($(
+            assert_create_file!($command => $path);
+        )*)*
+    };
+    ($($command:tt => $path:tt),*) => {
+        $(
+            {
+                use ::std::fs::File;
+
+                assert!(File::open($path).is_err(),
+                    format!("File `{}` already exist", $path)
+                );
+
+                run!($command);
 
                 assert!(File::open($path).is_ok(),
                     format!("Command `{}` did not create file `{}`", $command, $path)
@@ -142,4 +154,24 @@ pub fn split_args(line: &str) -> Vec<String> {
     }
     push_arg(&mut args, &line.as_bytes()[start..]);
     args
+}
+
+#[macro_export]
+macro_rules! assert_content {
+    ($path:tt, $content:tt) => {
+        {
+            use ::std::fs;
+            use ::std::io::Read;
+            use ::std::path::Path;
+
+            let path = Path::new($path);
+            let mut file = fs::File::open(path)
+                .expect(&format!("File: {:?} can not open.", path));
+            let mut contents = String::new();
+            file.read_to_string(&mut contents)
+                .expect(&format!("File: {:?} wrong content reading.", path));
+
+            assert_eq!($content, contents);
+        }
+    };
 }

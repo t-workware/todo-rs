@@ -1,11 +1,12 @@
 #[macro_use]
 mod common;
 
-use std::env;
+use std::{env, fs};
 
 #[test]
 fn create_new_issue() {
     env::set_var("TODO_HOME", "./");
+    fs::remove_dir_all("target/test_new").unwrap();
 
     assert_create_file!(
         [
@@ -60,4 +61,12 @@ file = "target/test_new/todo.seq"
         "todo -n top:C s:\"\" n:task ext:txt" => "target/test_new/tasks/C.4.task.txt",
         "todo new t:C s:\"\" task" => "target/test_new/tasks/C.5.task.md"
     );
+
+    run!("todo -n t:A s:cur i:ID context:test task");
+    assert_content!("target/test_new/tasks/cur/A.ID.task.md", "#[context: test]\n");
+    delete_file!("target/test_new/tasks/cur/A.ID.task.md");
+
+    run!("todo -n p: s: i: context:test time:\"2 free\" task");
+    assert_content!("target/test_new/tasks/task.md", "#[context: test]\n#[time: 2 free]\n");
+    delete_file!("target/test_new/tasks/task.md");
 }

@@ -10,6 +10,7 @@ use todo::tools::map_str;
 
 #[derive(Clone, Debug, Default)]
 pub struct Create {
+    content: String,
     pub format: Option<String>,
     pub dir: Option<String>,
     pub ext: Option<String>,
@@ -35,7 +36,12 @@ impl Command for Create {
             if let Some(dir) = path.parent() {
                 fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
             }
-            fs::File::create(path).expect(&format!("Creation error with path: {}", str_path));
+            let mut file = fs::File::create(path)
+                .expect(&format!("Creation error with path: {}", str_path));
+            if !self.content.is_empty() {
+                file.write_all(self.content.as_bytes())
+                    .expect(&format!("Error content write to file: {}", str_path));
+            }
 
             println!("{}", str_path);
         }
@@ -60,10 +66,15 @@ impl CanCreate for Create {
         format.key_replace(&issue.id_attr_key, id.as_str());
         format.key_replace("ext", map_str(&self.ext,|ext| ext.as_str()));
         for key in issue.attrs.keys.iter() {
-            format.key_replace(key.as_str(), issue.attrs.attr_value(key.as_str())
-                .map(|s| s.as_str())
-                .unwrap_or_default()
-            );
+            let key = key.as_str();
+            if key != issue.id_attr_key {
+                let value = issue.attrs.attr_value(key)
+                    .map(|s| s.as_str())
+                    .unwrap_or_default();
+                if !format.key_replace(key, value) {
+                    self.content += &format!("#[{}: {}]\n", key, value);
+                }
+            }
         }
 
         if let Some(ref dir) = self.dir {
@@ -77,7 +88,7 @@ trait Format {
     fn find_byte(&self, start: usize, needle: u8) -> Option<usize>;
     fn rfind_byte(&self, end: usize, needle: u8) -> Option<usize>;
     fn key_replaceable_pos(&self, key_pos: usize, key_len: usize) -> Option<(usize, usize)>;
-    fn key_replace(&mut self, key: &str, value: &str);
+    fn key_replace(&mut self, key: &str, value: &str) -> bool;
 }
 
 impl Format for String {
@@ -157,7 +168,8 @@ impl Format for String {
         }
     }
 
-    fn key_replace(&mut self, key: &str, value: &str) {
+    fn key_replace(&mut self, key: &str, value: &str) -> bool {
+        let mut replaced = false;
         let mut find_pos = 0;
 
         while let Some(index) = self.find_from_pos(find_pos, key) {
@@ -187,8 +199,10 @@ impl Format for String {
 
                 find_pos = head.len() + body.len() + tail.len();
                 *self = format!("{}{}{}", head, body, tail);
+                replaced = true;
             }
         }
+        replaced
     }
 }
 
