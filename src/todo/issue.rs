@@ -19,6 +19,6 @@ pub struct Issue<T: Content> {
 
 impl<T: Content> Issue<T> {
     pub fn get_id(&self) -> Option<&String> {
-        self.attrs.get_attr(&self.id_attr_key)
+        self.attrs.attr_value(&self.id_attr_key)
     }
 }

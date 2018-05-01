@@ -43,21 +43,21 @@ file = "target/test_new/todo.seq"
         [
             "todo new top:A scope:cur id:ID ext:txt name:\"task 1\"",
             "todo new top:A scope:cur id:ID ext:txt \"task 1\"",
-            "todo new top:A scope:cur i:ID e:txt n:\"task 1\"",
-            "todo new t:A s:cur i:ID e:txt \"task 1\"",
+            "todo new top:A scope:cur i:ID ext:txt n:\"task 1\"",
+            "todo new t:A s:cur i:ID ext:txt \"task 1\"",
             "todo --new top:A scope:cur id:ID ext:txt name:\"task 1\"",
             "todo --new top:A scope:cur id:ID ext:txt \"task 1\"",
-            "todo --new top:A scope:cur i:ID e:txt n:\"task 1\"",
-            "todo --new t:A s:cur i:ID e:txt \"task 1\"",
+            "todo --new top:A scope:cur i:ID ext:txt n:\"task 1\"",
+            "todo --new t:A s:cur i:ID ext:txt \"task 1\"",
             "todo -n top:A scope:cur id:ID ext:txt name:\"task 1\"",
             "todo -n top:A scope:cur id:ID ext:txt \"task 1\"",
-            "todo -n top:A scope:cur i:ID e:txt n:\"task 1\"",
-            "todo -n t:A s:cur i:ID e:txt \"task 1\""
+            "todo -n top:A scope:cur i:ID ext:txt n:\"task 1\"",
+            "todo -n t:A s:cur i:ID ext:txt \"task 1\""
         ] => "target/test_new/tasks/cur/A.ID.task 1.txt"
     );
 
     assert_create_file!(
-        "todo -n top:C s:\"\" n:task e:txt" => "target/test_new/tasks/C.4.task.txt",
+        "todo -n top:C s:\"\" n:task ext:txt" => "target/test_new/tasks/C.4.task.txt",
         "todo new t:C s:\"\" task" => "target/test_new/tasks/C.5.task.md"
     );
 }

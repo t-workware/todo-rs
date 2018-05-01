@@ -11,10 +11,14 @@ impl<T> Setup for Issue<T>
 {
     fn setup(mut self, settings: &Settings) -> Self {
         for attr in &settings.issue.attrs {
-            self.attrs.add_name(attr.key.clone(), attr.aliases.clone());
+            let key = self.attrs.add_key(&attr.key);
+            self.attrs.add_aliases(key.as_str(), &attr.aliases)
+                .expect("Setup aliases error");
         }
-        self.id_attr_key = settings.issue.id_attr_key.clone();
-        self.attrs.default_key = settings.issue.default_attr_key.clone();
+        let key = self.attrs.add_key(&settings.issue.id_attr_key);
+        self.id_attr_key = (*key).clone();
+        let key = self.attrs.add_key(&settings.issue.default_attr_key);
+        self.attrs.default_key = key;
         self
     }
 }
@@ -53,9 +57,7 @@ impl<T> Setup for New<T>
         let command = &settings.command;
         if let Some(ref default_attrs) = command.new.default_attrs {
             for (key, value) in default_attrs.iter() {
-                self.issue.attrs.set_attr_by_alias(key.as_str(), value.clone())
-                    .expect(&format!("Attribute `{}`, specified in [{}] is not found for command `{}`",
-                                     key, stringify!(command.new.default_attrs), stringify!(New)));
+                self.issue.attrs.set_attr_value(key.as_str(), value.clone());
             }
         }
         self

@@ -9,14 +9,14 @@ use failure::Error;
 use types::Str;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct AttrName {
+pub struct AttrAliases {
     pub key: String,
     pub aliases: Vec<String>,
 }
 
-impl AttrName {
+impl AttrAliases {
     pub fn new(key: &str, aliases: Vec<&str>) -> Self {
-        AttrName {
+        AttrAliases {
             key: key.to_string(),
             aliases: aliases.iter().map(|a| a.to_string()).collect()
         }
@@ -25,7 +25,7 @@ impl AttrName {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Issue {
-    pub attrs: Vec<AttrName>,
+    pub attrs: Vec<AttrAliases>,
     pub id_attr_key: String,
     pub default_attr_key: String,
 }
@@ -34,10 +34,10 @@ impl Default for Issue {
     fn default() -> Self {
         Issue {
             attrs: vec![
-                AttrName::new("id", vec!["i"]),
-                AttrName::new("priority", vec!["p", "top", "t"]),
-                AttrName::new("scope", vec!["s"]),
-                AttrName::new("name", vec!["n", "title"]),
+                AttrAliases::new("id", vec!["i"]),
+                AttrAliases::new("priority", vec!["p", "top", "t"]),
+                AttrAliases::new("scope", vec!["s"]),
+                AttrAliases::new("name", vec!["n", "title"]),
             ],
             id_attr_key: "id".to_string(),
             default_attr_key: "name".to_string(),

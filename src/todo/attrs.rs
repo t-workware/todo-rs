@@ -1,91 +1,68 @@
-use std::collections::{HashMap, hash_map::Iter};
+use std::collections::HashMap;
+use std::rc::Rc;
 use todo::error::TodoError;
 
 #[derive(Clone, Debug, Default)]
 pub struct Attrs {
-    names: Vec<(String, Vec<String>)>,
     attrs: HashMap<String, String>,
-    pub default_key: String,
+    aliases: HashMap<String, Rc<String>>,
+    pub keys: Vec<Rc<String>>,
+    pub default_key: Rc<String>,
 }
 
 impl Attrs {
-    pub fn names(&self) -> &[(String, Vec<String>)] {
-        &self.names
-    }
-
-    pub fn names_mut(&mut self) -> &mut Vec<(String, Vec<String>)> {
-        &mut self.names
-    }
-
-    pub fn set_names(&mut self, names: Vec<(String, Vec<String>)>) {
-        self.names = names;
-    }
-
-    pub fn get_aliases(&self, attr_key: &str) -> Option<&Vec<String>> {
-        for &(ref key, ref aliases) in &self.names {
-            if attr_key == *key {
-                return Some(aliases);
-            }
-        }
-        None
-    }
-
-    pub fn get_key(&self, alias: &str) -> Option<&str> {
-        for &(ref key, ref aliases) in &self.names {
-            if alias == *key {
-                return Some(key.as_str());
-            }
-            for name in aliases {
-                if alias == *name {
-                    return Some(key.as_str());
-                }
-            }
-        }
-        None
-    }
-
-    pub fn add_name<K: Into<String>>(&mut self, attr_key: K, aliases: Vec<String>) {
-        self.names.push((attr_key.into(), aliases));
-    }
-
-    pub fn add_name_alias<K: Into<String>, A: Into<String>>(&mut self, attr_key: K, alias: A) {
-        let attr_key = attr_key.into();
-        let alias = alias.into();
-        for &mut (ref key, ref mut aliases) in &mut self.names {
-            if attr_key == *key {
-                aliases.push(alias);
-                return;
-            }
-        }
-        self.names.push((attr_key.into(), vec![alias]));
-    }
-
-    pub fn iter(&self) -> Iter<String, String> {
-        self.attrs.iter()
-    }
-
-    pub fn get_attr(&self, key: &str) -> Option<&String> {
-        self.attrs.get(key)
-    }
-
-    pub fn set_attr<K: Into<String>, V: Into<String>>(&mut self, key: K, value: V) -> Result<Option<String>, TodoError> {
-        let key = key.into();
-        if self.get_aliases(&key).is_some() {
-            Ok(self.attrs.insert(key, value.into()))
-        } else {
-            Err(TodoError::UnknownAttribute { attr: key })
-        }
-    }
-
-    pub fn set_attr_by_alias<V: Into<String>>(&mut self, alias: &str, value: V) -> Option<Option<String>> {
-        self.get_key(alias)
-            .map(|key| key.to_string())
-            .and_then(|key| {
-                Some(self.attrs.insert(key, value.into()))
+    pub fn add_key(&mut self, key: &str) -> Rc<String> {
+        self.find_key(key)
+            .unwrap_or_else(|| {
+                let key = Rc::new(key.to_string());
+                self.keys.push(key.clone());
+                key
             })
     }
 
+    pub fn find_key(&self, key: &str) -> Option<Rc<String>> {
+        self.keys.iter()
+            .find(|&item| item.as_str() == key)
+            .map(|item| item.clone())
+    }
+
+    pub fn key_by_alias(&self, alias: &str) -> Option<Rc<String>> {
+        if let Some(key) = self.find_key(alias) {
+            Some(key)
+        } else {
+            self.aliases.get(alias).map(|key| key.clone())
+        }
+    }
+
+    pub fn add_aliases<A: AsRef<str>>(&mut self, key: &str, aliases: &[A]) -> Result<(), TodoError> {
+        if let Some(key) = self.find_key(key) {
+            for alias in aliases {
+                let alias = alias.as_ref().to_string();
+                if self.aliases.contains_key(&alias) {
+                    return Err(TodoError::AliasAlreadyExists { alias, key: (*key).clone() });
+                }
+                self.aliases.insert(alias, key.clone());
+            }
+            Ok(())
+        } else {
+            Err(TodoError::KeyNotFound { key: key.to_string() })
+        }
+    }
+
+    pub fn attr_value(&self, key: &str) -> Option<&String> {
+        self.attrs.get(key)
+    }
+
+    pub fn set_attr_value<V: Into<String>>(&mut self, alias: &str, value: V) -> Option<String> {
+        let key = self.key_by_alias(alias).unwrap_or_else(|| {
+            let key = Rc::new(alias.to_string());
+            self.keys.push(key.clone());
+            key
+        });
+        self.attrs.insert((*key).clone(), value.into())
+    }
+
     pub fn set_default_attr<V: Into<String>>(&mut self, value: V) -> Option<String> {
-        self.attrs.insert(self.default_key.clone(), value.into())
+        self.attrs.insert((*self.default_key).clone(), value.into())
     }
 }

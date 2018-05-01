@@ -14,30 +14,17 @@ pub struct New<T>
     pub issue: Issue<String>,
 }
 
-impl<T> New<T>
-    where T: Create
-{
-    pub fn new(create_command: T) -> New<T> {
-        New {
-            create: Some(create_command),
-            issue: Issue::<String>::default(),
-        }
-    }
-}
-
 impl<T> Command for New<T>
     where T: Create
 {
     fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
         if !param.is_empty() {
-            match self.issue.attrs.get_key(param.to_lowercase().as_str())
-                .map(|key| key.to_string())
-            {
-                Some(key) => {
-                    self.issue.attrs.set_attr(key, value)?;
-                },
-                _ if self.create.is_some() => self.create.as_mut().unwrap().set_param(param, value)?,
-                _ => return Err(TodoError::UnknownCommandParam { param: param.to_string() })
+            let mut is_create_param = false;
+            if let Some(create) = self.create.as_mut() {
+                is_create_param = create.set_param(param, value.clone()).is_ok();
+            }
+            if !is_create_param {
+                self.issue.attrs.set_attr_value(param.to_lowercase().as_str(), value);
             }
         } else {
             self.issue.attrs.set_default_attr(value);

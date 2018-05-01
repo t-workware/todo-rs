@@ -20,8 +20,8 @@ pub struct Create {
 impl Command for Create {
     fn set_param(&mut self, key: &str, value: String) -> Result<(), TodoError> {
         match key.to_lowercase().as_str() {
-            "ext" | "e" => self.ext = Some(value),
-            "path" | "p" => self.path = Some(value),
+            "ext" => self.ext = Some(value),
+            "path" => self.path = Some(value),
             _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() }),
         }
         Ok(())
@@ -59,12 +59,11 @@ impl CanCreate for Create {
 
         format.key_replace(&issue.id_attr_key, id.as_str());
         format.key_replace("ext", map_str(&self.ext,|ext| ext.as_str()));
-        for &(ref key, _) in issue.attrs.names() {
-            let key = key.as_str();
-            format.key_replace(key, map_str(
-                &issue.attrs.get_attr(key).map(|key| key.to_string()),
-                |value| value.as_str()
-            ));
+        for key in issue.attrs.keys.iter() {
+            format.key_replace(key.as_str(), issue.attrs.attr_value(key.as_str())
+                .map(|s| s.as_str())
+                .unwrap_or_default()
+            );
         }
 
         if let Some(ref dir) = self.dir {
