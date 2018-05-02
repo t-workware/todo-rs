@@ -93,6 +93,10 @@ trait Format {
 
 impl Format for String {
     fn find_from_pos(&self, pos: usize, needle: &str) -> Option<usize> {
+        if needle.len() > self.len() {
+            return None;
+        }
+
         let end = self.len() - needle.len() + 1;
         if pos < end {
             for i in pos..end {
