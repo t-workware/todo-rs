@@ -8,37 +8,26 @@ use failure::Error;
 
 use types::Str;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct AttrAliases {
-    pub key: String,
-    pub aliases: Vec<String>,
-}
-
-impl AttrAliases {
-    pub fn new(key: &str, aliases: Vec<&str>) -> Self {
-        AttrAliases {
-            key: key.to_string(),
-            aliases: aliases.iter().map(|a| a.to_string()).collect()
-        }
-    }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Issue {
-    pub attrs: Vec<AttrAliases>,
+    pub attrs: HashMap<String, Vec<String>>,
+    pub attrs_order: Option<Vec<String>>,
     pub id_attr_key: String,
     pub default_attr_key: String,
 }
 
 impl Default for Issue {
     fn default() -> Self {
+        let attrs = vec![
+            ("id".to_string(), vec!["i".to_string()]),
+            ("priority".to_string(), vec!["p".to_string(), "top".to_string(), "t".to_string()]),
+            ("scope".to_string(), vec!["s".to_string()]),
+            ("name".to_string(), vec!["n".to_string(), "title".to_string()]),
+        ].into_iter().collect();
+
         Issue {
-            attrs: vec![
-                AttrAliases::new("id", vec!["i"]),
-                AttrAliases::new("priority", vec!["p", "top", "t"]),
-                AttrAliases::new("scope", vec!["s"]),
-                AttrAliases::new("name", vec!["n", "title"]),
-            ],
+            attrs,
+            attrs_order: None,
             id_attr_key: "id".to_string(),
             default_attr_key: "name".to_string(),
         }

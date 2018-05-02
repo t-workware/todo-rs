@@ -6,7 +6,7 @@ use std::{env, fs};
 #[test]
 fn create_new_issue() {
     env::set_var("TODO_HOME", "./");
-    fs::remove_dir_all("target/test_new").unwrap();
+    let _ = fs::remove_dir_all("target/test_new");
 
     assert_create_file!(
         [
@@ -68,5 +68,29 @@ file = "target/test_new/todo.seq"
 
     run!("todo -n p: s: i: context:test time:\"2 free\" task");
     assert_content!("target/test_new/tasks/task.md", "#[context: test]\n#[time: 2 free]\n");
+    delete_file!("target/test_new/tasks/task.md");
+
+    create_file!("target/test_new/todo.toml", r#"
+[store.fs]
+dir = "target/test_new/tasks"
+format = "{scope:/}{name}{.:ext}"
+ext = "md"
+
+[issue.attrs]
+name = ["n", "title"]
+context = ["ctx"]
+assign = ["a", "as"]
+
+[issue]
+attrs_order = ["context", "assign"]
+
+[command.new.default_attrs]
+id = "ID"
+priority = "B"
+"#
+    );
+
+    run!("todo new s: id: ctx:test a:User title:task");
+    assert_content!("target/test_new/tasks/task.md", "#[context: test]\n#[assign: User]\n#[priority: B]\n");
     delete_file!("target/test_new/tasks/task.md");
 }

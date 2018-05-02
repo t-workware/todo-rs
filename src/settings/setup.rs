@@ -10,10 +10,25 @@ impl<T> Setup for Issue<T>
     where T: Content
 {
     fn setup(mut self, settings: &Settings) -> Self {
-        for attr in &settings.issue.attrs {
-            let key = self.attrs.add_key(&attr.key);
-            self.attrs.add_aliases(key.as_str(), &attr.aliases)
-                .expect("Setup aliases error");
+        let attrs_order = settings.issue.attrs_order.as_ref();
+        if let Some(attrs_order) = attrs_order {
+            for attr in attrs_order {
+                if let Some(aliases) = settings.issue.attrs.get(attr) {
+                    let key = self.attrs.add_key(attr.as_str());
+                    self.attrs.add_aliases(key.as_str(), aliases)
+                        .expect("Setup ordered aliases error");
+                }
+            }
+        }
+        for (attr, aliases) in &settings.issue.attrs {
+            if let Some(attrs_order) = attrs_order {
+                if attrs_order.contains(attr) {
+                    continue;
+                }
+            }
+            let key = self.attrs.add_key(attr.as_str());
+            self.attrs.add_aliases(key.as_str(), aliases)
+                .expect("Setup unordered aliases error");
         }
         let key = self.attrs.add_key(&settings.issue.id_attr_key);
         self.id_attr_key = (*key).clone();
