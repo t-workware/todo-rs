@@ -16,29 +16,29 @@ pub struct Find {
 
 #[derive(EnumIterator, PartialEq)]
 pub enum FindAttr {
+    IssuesDir,
     Format,
     Filter,
     All,
-    Dir
 }
 
 impl FindAttr {
     pub fn by_key(key: &str) -> Option<Self> {
         Some(match key {
+            key if FindAttr::IssuesDir.key() == key => FindAttr::IssuesDir,
             key if FindAttr::Format.key() == key => FindAttr::Format,
             key if FindAttr::Filter.key() == key => FindAttr::Filter,
             key if FindAttr::All.key() == key => FindAttr::All,
-            key if FindAttr::Dir.key() == key => FindAttr::Dir,
             _ => return None,
         })
     }
 
     pub fn key(&self) -> &'static str {
         match *self {
+            FindAttr::IssuesDir => "issues_dir",
             FindAttr::Format => "format",
             FindAttr::Filter => "filter",
             FindAttr::All => "all",
-            FindAttr::Dir => "dir"
         }
     }
 }
@@ -63,7 +63,7 @@ impl Find {
         let walker = WalkDir::new(root)
             .follow_links(true)
             .into_iter();
-        let issues_dir = OsStr::new(self.attrs.attr_value_as_str(FindAttr::Dir.key()));
+        let issues_dir = OsStr::new(self.attrs.attr_value_as_str(FindAttr::IssuesDir.key()));
 
         for entry in walker.filter_entry(|e|
             self.all() || !Find::is_hidden(e)

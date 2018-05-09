@@ -39,7 +39,7 @@ pub struct FsStore {
     pub attrs: HashMap<String, Vec<String>>,
     pub format: String,
     pub find_all: bool,
-    pub dir: String,
+    pub issues_dir: String,
     pub ext: String,
     pub id_generator: String,
 }
@@ -54,7 +54,7 @@ impl Default for FsStore {
             attrs,
             format: "{scope:/}{priority:.}{id:.}{name}{.:ext}".to_string(),
             find_all: false,
-            dir: "issues".to_string(),
+            issues_dir: "issues".to_string(),
             ext: "md".to_string(),
             id_generator: String::default()
         }

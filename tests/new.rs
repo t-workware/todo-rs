@@ -18,7 +18,7 @@ fn create_new_issue() {
 
     create_file!("target/test_new/todo.toml", r#"
 [store.fs]
-dir = "target/test_new/tasks"
+issues_dir = "target/test_new/tasks"
 format = "{scope:/}{priority:.}{id:.}{name}{.:ext}"
 ext = "md"
 id_generator = "sequence"
@@ -72,7 +72,7 @@ file = "target/test_new/todo.seq"
 
     create_file!("target/test_new/todo.toml", r#"
 [store.fs]
-dir = "target/test_new/tasks"
+issues_dir = "target/test_new/tasks"
 format = "{scope:/}{name}{.:ext}"
 ext = "md"
 

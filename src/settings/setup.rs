@@ -41,7 +41,7 @@ impl<T> Setup for Issue<T>
 impl Setup for fs::Create {
     fn setup(mut self, settings: &Settings) -> Self {
         self.format = Some(settings.store.fs.format.clone());
-        self.dir = Some(settings.store.fs.dir.clone());
+        self.dir = Some(settings.store.fs.issues_dir.clone());
         self.ext = Some(settings.store.fs.ext.clone());
         match settings.store.fs.id_generator.as_ref() {
             Generator::SEQUENCE => {
@@ -62,7 +62,7 @@ impl Setup for fs::Find {
         if settings.store.fs.find_all {
             self.attrs.set_attr_value(fs::FindAttr::All.key(), true.to_string());
         }
-        self.attrs.set_attr_value(fs::FindAttr::Dir.key(), settings.store.fs.dir.clone());
+        self.attrs.set_attr_value(fs::FindAttr::IssuesDir.key(), settings.store.fs.issues_dir.clone());
         for (key, aliases) in &settings.store.fs.attrs {
             let _ = self.attrs.add_aliases(key.as_str(), aliases);
         }
