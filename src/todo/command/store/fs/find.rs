@@ -126,6 +126,10 @@ impl Command for Find {
         }
     }
 
+    fn default_param_key(&self) -> &str {
+        self.attrs.default_key.as_str()
+    }
+
     fn exec(&mut self) {
         let root = Path::new(".");
         self.walk_through_issues(&root)

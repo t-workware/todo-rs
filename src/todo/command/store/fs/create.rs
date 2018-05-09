@@ -28,6 +28,10 @@ impl Command for Create {
         Ok(())
     }
 
+    fn default_param_key(&self) -> &str {
+        "path"
+    }
+
     fn exec(&mut self) {
         if let Some(ref str_path) = self.path {
             let path = Path::new(str_path);

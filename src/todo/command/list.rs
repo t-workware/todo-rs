@@ -33,10 +33,17 @@ impl<T> Command for List<T>
             }
         } else {
             if let Some(find) = self.find.as_mut() {
-                find.set_param("filter", value)?;
+                let default_key = find.default_param_key().to_string();
+                find.set_param(&default_key, value)?;
             }
         }
         Ok(())
+    }
+
+    fn default_param_key(&self) -> &str {
+        self.find.as_ref()
+            .map(|find| find.default_param_key())
+            .expect("Find command not exist")
     }
 
     fn exec(&mut self) {

@@ -32,6 +32,10 @@ impl<T> Command for New<T>
         Ok(())
     }
 
+    fn default_param_key(&self) -> &str {
+        self.issue.attrs.default_key.as_str()
+    }
+
     fn exec(&mut self) {
         let mut create = mem::replace(&mut self.create, None)
             .expect("Create command not exist");
