@@ -3,17 +3,44 @@ use std::ffi::OsStr;
 use regex::Regex;
 use walkdir::{DirEntry, WalkDir};
 use failure::Error;
+use todo::attrs::Attrs;
 use todo::command::Command;
 use todo::command::store::Find as CanFind;
 use todo::error::TodoError;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Find {
-    pub format: Option<String>,
+    pub attrs: Attrs,
     pub filter: Option<Regex>,
-    pub all: bool,
-    pub dir: String,
-    pub exts: Option<Vec<String>>,
+}
+
+#[derive(EnumIterator, PartialEq)]
+pub enum FindAttr {
+    Format,
+    Filter,
+    All,
+    Dir
+}
+
+impl FindAttr {
+    pub fn by_key(key: &str) -> Option<Self> {
+        Some(match key {
+            key if FindAttr::Format.key() == key => FindAttr::Format,
+            key if FindAttr::Filter.key() == key => FindAttr::Filter,
+            key if FindAttr::All.key() == key => FindAttr::All,
+            key if FindAttr::Dir.key() == key => FindAttr::Dir,
+            _ => return None,
+        })
+    }
+
+    pub fn key(&self) -> &'static str {
+        match *self {
+            FindAttr::Format => "format",
+            FindAttr::Filter => "filter",
+            FindAttr::All => "all",
+            FindAttr::Dir => "dir"
+        }
+    }
 }
 
 impl Find {
@@ -24,14 +51,22 @@ impl Find {
             .unwrap_or(false)
     }
 
+    pub fn all(&self) -> bool {
+        self.attrs.attr_value(FindAttr::All.key())
+            .map(|value| {
+                !["false", "f", "not", "no", "n", "0"].contains(&value.to_lowercase().as_str())
+            })
+            .unwrap_or(false)
+    }
+
     pub fn walk_through_issues(&self, root: &Path) -> Result<(), Error> {
         let walker = WalkDir::new(root)
             .follow_links(true)
             .into_iter();
-        let issues_dir = OsStr::new(&self.dir);
+        let issues_dir = OsStr::new(self.attrs.attr_value_as_str(FindAttr::Dir.key()));
 
         for entry in walker.filter_entry(|e|
-            self.all || !Find::is_hidden(e)
+            self.all() || !Find::is_hidden(e)
         ) {
             let entry = entry?;
             if entry.file_type().is_file() {
@@ -54,19 +89,41 @@ impl Find {
     }
 }
 
+impl Default for Find {
+    fn default() -> Self {
+        let mut attrs = Attrs::default();
+        for variant in FindAttr::iter_variants() {
+            let key = attrs.add_key(variant.key());
+            if variant == FindAttr::Filter {
+                attrs.default_key = key;
+            }
+        }
+
+        Find {
+            attrs,
+            filter: Default::default()
+        }
+    }
+}
+
 impl CanFind for Find {}
 
 impl Command for Find {
-    fn set_param(&mut self, key: &str, value: String) -> Result<(), TodoError> {
-        match key.to_lowercase().as_str() {
-            "filter" | "f" => self.filter = Some(Regex::new(&value)
-                .expect(&format!("Invalid filter regular expression: {}", value))),
-            "all" | "a" => self.all = if ["false", "f", "not", "no", "n", "0"]
-                .contains(&value.to_lowercase().as_str()) {false} else {true},
-            "dir" | "d" => self.dir = value,
-            _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() }),
+    fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
+        if let Some(key) = self.attrs.key_by_alias(param.to_lowercase().as_str()) {
+            let attr = FindAttr::by_key(key.as_str())
+                .expect(&format!("{} command has `{}` key, but not support this attr", stringify!(Find), key));
+
+            match attr {
+                FindAttr::Filter => self.filter = Some(Regex::new(&value)
+                    .expect(&format!("Invalid filter regular expression: {}", value))),
+                _ => ()
+            }
+            self.attrs.set_attr_value(attr.key(), value);
+            Ok(())
+        } else {
+            Err(TodoError::UnknownCommandParam { param: param.to_string() })
         }
-        Ok(())
     }
 
     fn exec(&mut self) {

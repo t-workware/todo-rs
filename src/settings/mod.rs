@@ -36,6 +36,7 @@ impl Default for Issue {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FsStore {
+    pub attrs: HashMap<String, Vec<String>>,
     pub format: String,
     pub find_all: bool,
     pub dir: String,
@@ -45,7 +46,12 @@ pub struct FsStore {
 
 impl Default for FsStore {
     fn default() -> Self {
+        let attrs = vec![
+            ("all".to_string(), vec!["a".to_string()]),
+        ].into_iter().collect();
+
         FsStore {
+            attrs,
             format: "{scope:/}{priority:.}{id:.}{name}{.:ext}".to_string(),
             find_all: false,
             dir: "issues".to_string(),

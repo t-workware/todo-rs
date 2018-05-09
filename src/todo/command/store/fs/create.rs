@@ -68,9 +68,7 @@ impl CanCreate for Create {
         for key in issue.attrs.keys.iter() {
             let key = key.as_str();
             if key != issue.id_attr_key {
-                let value = issue.attrs.attr_value(key)
-                    .map(|s| s.as_str())
-                    .unwrap_or_default();
+                let value = issue.attrs.attr_value_as_str(key);
                 if !format.key_replace(key, value) {
                     self.content += &format!("#[{}: {}]\n", key, value);
                 }

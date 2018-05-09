@@ -59,8 +59,13 @@ impl Setup for fs::Create {
 
 impl Setup for fs::Find {
     fn setup(mut self, settings: &Settings) -> Self {
-        self.all = settings.store.fs.find_all;
-        self.dir = settings.store.fs.dir.clone();
+        if settings.store.fs.find_all {
+            self.attrs.set_attr_value(fs::FindAttr::All.key(), true.to_string());
+        }
+        self.attrs.set_attr_value(fs::FindAttr::Dir.key(), settings.store.fs.dir.clone());
+        for (key, aliases) in &settings.store.fs.attrs {
+            let _ = self.attrs.add_aliases(key.as_str(), aliases);
+        }
         self
     }
 }

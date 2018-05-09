@@ -55,7 +55,6 @@ impl Cmd {
             for param in params_arg.vals.iter() {
                 let (mut key, mut value) = param.split_at_byte(::PARAM_SEPARATOR);
                 cmd.set_param(key.as_str(), value.as_str().to_string())?;
-//                println!("param: {:?}, ({:?}, {:?})", param, key, value);
             }
         }
         cmd.exec();

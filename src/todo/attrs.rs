@@ -53,6 +53,10 @@ impl Attrs {
         self.attrs.get(key)
     }
 
+    pub fn attr_value_as_str(&self, key: &str) -> &str {
+        self.attrs.get(key).map(|s| s.as_str()).unwrap_or_default()
+    }
+
     pub fn set_attr_value<V: Into<String>>(&mut self, alias: &str, value: V) -> Option<String> {
         let key = self.key_by_alias(alias).unwrap_or_else(|| {
             let key = Rc::new(alias.to_string());
