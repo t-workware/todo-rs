@@ -40,9 +40,14 @@ impl<T> Setup for Issue<T>
 
 impl Setup for fs::Create {
     fn setup(mut self, settings: &Settings) -> Self {
-        self.format = Some(settings.store.fs.format.clone());
-        self.dir = Some(settings.store.fs.issues_dir.clone());
-        self.ext = Some(settings.store.fs.ext.clone());
+        self.attrs.set_attr_value(fs::CreateAttr::IssuesDir.key(), settings.store.fs.issues_dir.clone());
+        self.attrs.set_attr_value(fs::CreateAttr::Format.key(), settings.store.fs.format.clone());
+        self.attrs.set_attr_value(fs::CreateAttr::Ext.key(), settings.store.fs.ext.clone());
+
+        for (key, aliases) in &settings.store.fs.attrs {
+            let _ = self.attrs.add_aliases(key.as_str(), aliases);
+        }
+
         match settings.store.fs.id_generator.as_ref() {
             Generator::SEQUENCE => {
                 self.id_generator = Some(fs::SequenceGenerator {

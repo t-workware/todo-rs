@@ -2,34 +2,61 @@ use std::fs;
 use std::path::Path;
 use std::io::{Read, Write};
 use failure::Error;
+use todo::attrs::Attrs;
 use todo::error::TodoError;
 use todo::command::Command;
 use todo::command::store::Create as CanCreate;
 use todo::issue::{Content, Issue};
-use todo::tools::map_str;
 
 #[derive(Clone, Debug, Default)]
 pub struct Create {
     content: String,
-    pub format: Option<String>,
-    pub dir: Option<String>,
-    pub ext: Option<String>,
+    pub attrs: Attrs,
     pub path: Option<String>,
     pub id_generator: Option<SequenceGenerator>,
 }
 
-impl Command for Create {
-    fn set_param(&mut self, key: &str, value: String) -> Result<(), TodoError> {
-        match key.to_lowercase().as_str() {
-            "ext" => self.ext = Some(value),
-            "path" => self.path = Some(value),
-            _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() }),
+#[derive(PartialEq)]
+pub enum CreateAttr {
+    IssuesDir,
+    Format,
+    Ext,
+}
+
+impl CreateAttr {
+    pub fn by_key(key: &str) -> Option<Self> {
+        Some(match key {
+            key if CreateAttr::IssuesDir.key() == key => CreateAttr::IssuesDir,
+            key if CreateAttr::Format.key() == key => CreateAttr::Format,
+            key if CreateAttr::Ext.key() == key => CreateAttr::Ext,
+            _ => return None,
+        })
+    }
+
+    pub fn key(&self) -> &'static str {
+        match *self {
+            CreateAttr::IssuesDir => "issues_dir",
+            CreateAttr::Format => "format",
+            CreateAttr::Ext => "ext",
         }
-        Ok(())
+    }
+}
+
+impl Command for Create {
+    fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
+        if let Some(key) = self.attrs.key_by_alias(param.to_lowercase().as_str()) {
+            let attr = CreateAttr::by_key(key.as_str())
+                .expect(&format!("{} command has `{}` key, but not support this attr", stringify!(Create), key));
+
+            self.attrs.set_attr_value(attr.key(), value);
+            Ok(())
+        } else {
+            Err(TodoError::UnknownCommandParam { param: param.to_string() })
+        }
     }
 
     fn default_param_key(&self) -> &str {
-        "path"
+        self.attrs.default_key.as_str()
     }
 
     fn exec(&mut self) {
@@ -54,7 +81,7 @@ impl Command for Create {
 
 impl CanCreate for Create {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
-        let mut format = map_str(&self.format, String::as_str).to_string();
+        let mut format = self.attrs.attr_value_as_str(CreateAttr::Format.key()).to_string();
 
         let mut id = issue.get_id().map(|id| id.clone()).unwrap_or_default();
 
@@ -68,7 +95,7 @@ impl CanCreate for Create {
         }
 
         format.key_replace(&issue.id_attr_key, id.as_str());
-        format.key_replace("ext", map_str(&self.ext,|ext| ext.as_str()));
+        format.key_replace(CreateAttr::Ext.key(), self.attrs.attr_value_as_str(CreateAttr::Ext.key()));
         for key in issue.attrs.keys.iter() {
             let key = key.as_str();
             if key != issue.id_attr_key {
@@ -79,7 +106,7 @@ impl CanCreate for Create {
             }
         }
 
-        if let Some(ref dir) = self.dir {
+        if let Some(dir) = self.attrs.attr_value(CreateAttr::IssuesDir.key()) {
             self.path = Some(format!("{}/{}", dir, format));
         }
     }
