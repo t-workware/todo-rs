@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::io::Write;
-use todo::attrs::Attrs;
+use todo::attrs::{Attrs, AttrParser};
 use todo::error::TodoError;
 use todo::command::Command;
 use todo::command::store::Create as CanCreate;
@@ -101,7 +101,7 @@ impl CanCreate for Create {
             if key != issue.id_attr_key {
                 let value = issue.attrs.attr_value_as_str(key);
                 if !format.key_replace(key, value) {
-                    self.content += &format!("#[{}: {}]\n", key, value);
+                    self.content += &format!("{}\n", AttrParser::encode_attr(key, value));
                 }
             }
         }

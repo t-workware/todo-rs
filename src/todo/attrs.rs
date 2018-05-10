@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use regex::Regex;
 use todo::error::TodoError;
 
 #[derive(Clone, Debug, Default)]
@@ -68,5 +69,106 @@ impl Attrs {
 
     pub fn set_default_attr<V: Into<String>>(&mut self, value: V) -> Option<String> {
         self.attrs.insert((*self.default_key).clone(), value.into())
+    }
+
+    pub fn parse_and_set_attr<L>(&mut self, line: L, parser: &AttrParser) -> Option<String>
+    where
+        L: AsRef<str>
+    {
+        if let Some((key, value)) = parser.parse_attr(line) {
+            self.set_attr_value(key.as_str(), value)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct AttrParser {
+    pub regex: Regex,
+}
+
+impl AttrParser {
+    pub fn new() -> Self {
+        let regex = r"^\#\[(?P<key>.+):\s(?P<value>.*)\]$";
+        AttrParser {
+            regex: Regex::new(regex)
+                .expect(&format!("`{}` is not regular expression", regex))
+        }
+    }
+
+    pub fn encode_attr<K, V>(key: K, value: V) -> String
+    where
+        K: AsRef<str>,
+        V: AsRef<str>,
+    {
+        format!("#[{}: {}]", key.as_ref(), value.as_ref())
+    }
+
+    pub fn parse_attr<L>(&self, line: L) -> Option<(String, String)>
+    where
+        L: AsRef<str>,
+    {
+        for cap in self.regex.captures_iter(line.as_ref()) {
+            return Some((cap[1].to_string(), cap[2].to_string()));
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encode_attr() {
+        assert_eq!("#[key: value]", AttrParser::encode_attr("key", "value"));
+        assert_eq!("#[key 1: value 1, value 2]", AttrParser::encode_attr("key 1", "value 1, value 2"));
+    }
+
+    #[test]
+    fn parse_attr() {
+        let parser = AttrParser::new();
+
+        assert_eq!(None, parser.parse_attr("test"));
+        assert_eq!(None, parser.parse_attr("#[]"));
+        assert_eq!(None, parser.parse_attr("#[key]"));
+        assert_eq!(Some(("key".to_string(), "value".to_string())),
+                   parser.parse_attr("#[key: value]"));
+        assert_eq!(Some(("key 1".to_string(), "value 1".to_string())),
+                   parser.parse_attr("#[key 1: value 1]"));
+        assert_eq!(Some(("key 1".to_string(), "[value 1, value 2]".to_string())),
+                   parser.parse_attr("#[key 1: [value 1, value 2]]"));
+    }
+
+    #[test]
+    fn parse_and_set_attr() {
+        let mut attrs = Attrs::default();
+        let parser = AttrParser::new();
+
+        assert_eq!(0, attrs.keys.len());
+
+        assert_eq!(None, attrs.parse_and_set_attr("#[key]", &parser));
+        assert_eq!(None, attrs.attr_value("key"));
+
+        assert_eq!(0, attrs.keys.len());
+
+        assert_eq!(None, attrs.parse_and_set_attr("#[key: value]", &parser));
+        assert_eq!(Some("value"), attrs.attr_value("key")
+            .map(String::as_str));
+
+        assert_eq!(1, attrs.keys.len());
+
+        assert_eq!(Some("value"), attrs.parse_and_set_attr("#[key: value 2]", &parser)
+            .as_ref().map(String::as_str));
+        assert_eq!(Some("value 2"), attrs.attr_value("key")
+            .map(String::as_str));
+
+        assert_eq!(1, attrs.keys.len());
+
+        assert_eq!(None, attrs.parse_and_set_attr("#[key 1: [1, 2]]", &parser));
+        assert_eq!(Some("[1, 2]"), attrs.attr_value("key 1")
+            .map(String::as_str));
+
+        assert_eq!(2, attrs.keys.len());
     }
 }
