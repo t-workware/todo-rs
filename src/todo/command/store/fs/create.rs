@@ -1,12 +1,12 @@
 use std::fs;
 use std::path::Path;
 use std::io::Write;
-use todo::attrs::{Attrs, AttrParser};
+use todo::attrs::Attrs;
 use todo::error::TodoError;
 use todo::command::Command;
 use todo::command::store::Create as CanCreate;
+use todo::command::store::fs::{Format, SequenceGenerator, AttrParser};
 use todo::issue::{Content, Issue};
-use todo::command::store::fs::{Format, SequenceGenerator};
 
 #[derive(Clone, Debug, Default)]
 pub struct Create {
