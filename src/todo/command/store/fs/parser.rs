@@ -1,4 +1,7 @@
+use std::str;
+use std::io::{Read, BufRead, BufReader};
 use regex::Regex;
+use failure::Error;
 use todo::attrs::Attrs;
 
 pub struct AttrParser {
@@ -41,6 +44,50 @@ impl AttrParser {
         } else {
             None
         }
+    }
+
+    pub fn read_attrs<R>(&self, inner: R) -> Result<Vec<(String, String)>, Error>
+        where
+            R: Read,
+    {
+        let mut attrs = Vec::new();
+
+        let mut reader = BufReader::new(inner);
+        let mut buf = Vec::<u8>::new();
+        let mut attr = String::new();
+        let mut open_brackets = 0;
+
+        while reader.read_until(b'\n', &mut buf)? != 0 {
+            if buf.starts_with(&[b'#', b'[']) || !attr.is_empty() {
+                let mut parsed = false;
+                for (i, &bch) in buf.iter().enumerate() {
+                    match bch {
+                        b'[' => {
+                            open_brackets += 1;
+                        },
+                        b']' => {
+                            open_brackets -= 1;
+
+                            if open_brackets == 0 {
+                                attr += str::from_utf8(&buf[..(i + 1)])?;
+                                self.parse_attr(&attr)
+                                    .map(|parsed_attr| attrs.push(parsed_attr))
+                                    .ok_or(format_err!("Can't parse attr `{}`", attr))?;
+                                attr.clear();
+                                parsed = true;
+                                break;
+                            }
+                        },
+                        _ => {}
+                    }
+                }
+                if !parsed {
+                    attr += str::from_utf8(&buf)?;
+                }
+            }
+            buf.clear();
+        }
+        Ok(attrs)
     }
 }
 
@@ -106,5 +153,68 @@ mod tests {
             .map(String::as_str));
 
         assert_eq!(2, attrs.keys.len());
+    }
+
+    #[test]
+    fn read_attrs() {
+        let as_attrs = |array: &[(&str, &str)]| {
+            array.iter().map(|x| (x.0.to_string(), x.1.to_string())).collect::<Vec<(String, String)>>()
+        };
+        let parser = AttrParser::new();
+
+        let source = "";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[]), attrs);
+
+        let source = "[key: value]";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[]), attrs);
+
+        let source = "#[key: value";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[]), attrs);
+
+        let source = "#[key: value]";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+
+        let source = "\n#[\nkey:\n value\n]\n";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+
+        let source = "#[key: value] // attr";
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+
+        let source = r#"
+#[key: value]
+// #[test: some]
+test
+#[key 2: value 2] // new value
+ #[test 2: some 2]
+        "#;
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[("key", "value"), ("key 2", "value 2")]), attrs);
+
+        let source = r#"
+#[key: value []]
+// #[test: some]
+test
+#[key: value [new]] // new value
+ #[test: [some 1]]
+#[test:
+[some
+[2]]]
+        "#;
+        let attrs = parser.read_attrs(source.as_bytes())
+            .expect("Read attrs error");
+        assert_eq!(as_attrs(&[("key", "value []"), ("key", "value [new]"), ("test", "[some\n[2]]")]), attrs);
     }
 }
