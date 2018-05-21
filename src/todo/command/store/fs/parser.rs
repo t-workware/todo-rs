@@ -215,6 +215,10 @@ test
         "#;
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[("key", "value []"), ("key", "value [new]"), ("test", "[some\n[2]]")]), attrs);
+        assert_eq!(as_attrs(&[
+            ("key", "value []"),
+            ("key", "value [new]"),
+            ("test", "[some\n[2]]")
+        ]), attrs);
     }
 }
