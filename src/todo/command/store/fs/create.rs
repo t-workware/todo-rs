@@ -83,7 +83,7 @@ impl CanCreate for Create {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
         let mut format = self.attrs.attr_value_as_str(CreateAttr::Format.key()).to_string();
 
-        let mut id = issue.get_id().map(|id| id.clone()).unwrap_or_default();
+        let mut id = issue.get_id().cloned().unwrap_or_default();
 
         if let Some(ref generator) = self.id_generator {
             let id_found = format.find(&issue.id_attr_key)
@@ -96,7 +96,7 @@ impl CanCreate for Create {
 
         format.key_replace(&issue.id_attr_key, id.as_str());
         format.key_replace(CreateAttr::Ext.key(), self.attrs.attr_value_as_str(CreateAttr::Ext.key()));
-        for key in issue.attrs.keys.iter() {
+        for key in &issue.attrs.keys {
             let key = key.as_str();
             if key != issue.id_attr_key {
                 let value = issue.attrs.attr_value_as_str(key);

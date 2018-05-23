@@ -31,11 +31,9 @@ impl<T> Command for List<T>
                 _ if self.find.is_some() => self.find.as_mut().unwrap().set_param(key, value)?,
                 _ => return Err(TodoError::UnknownCommandParam { param: key.to_string() })
             }
-        } else {
-            if let Some(find) = self.find.as_mut() {
-                let default_key = find.default_param_key().to_string();
-                find.set_param(&default_key, value)?;
-            }
+        } else if let Some(find) = self.find.as_mut() {
+            let default_key = find.default_param_key().to_string();
+            find.set_param(&default_key, value)?;
         }
         Ok(())
     }

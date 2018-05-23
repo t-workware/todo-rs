@@ -33,10 +33,11 @@ impl AttrParser {
         where
             L: AsRef<str>,
     {
-        for cap in self.attr_regex.captures_iter(line.as_ref()) {
-            return Some((cap[1].trim().to_string(), cap[2].trim().to_string()));
+        if let Some(cap) = self.attr_regex.captures_iter(line.as_ref()).next() {
+            Some((cap[1].trim().to_string(), cap[2].trim().to_string()))
+        } else {
+            None
         }
-        None
     }
 
     pub fn parse_and_set_attr<L>(&self, line: L, attrs: &mut Attrs) -> Option<String>
@@ -54,7 +55,7 @@ impl AttrParser {
         where
             V: Into<String> + AsRef<str>,
     {
-        for cap in self.expr_regex.captures_iter(value.as_ref()) {
+        if let Some(cap) = self.expr_regex.captures_iter(value.as_ref()).next() {
             return (cap[1].trim().to_string(), Some(cap[2].trim().to_string()));
         }
         (value.into(), None)

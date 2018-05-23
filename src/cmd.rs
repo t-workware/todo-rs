@@ -52,7 +52,7 @@ impl Cmd {
         }
 
         if let Some(params_arg) = matches.args.get(name) {
-            for param in params_arg.vals.iter() {
+            for param in &params_arg.vals {
                 let (mut key, mut value) = param.split_at_byte(::PARAM_SEPARATOR);
                 cmd.set_param(key.as_str(), value.as_str().to_string())?;
             }

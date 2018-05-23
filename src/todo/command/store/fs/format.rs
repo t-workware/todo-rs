@@ -30,8 +30,8 @@ impl Format for String {
 
     fn find_byte(&self, start: usize, needle: u8) -> Option<usize> {
         let source = self.as_bytes();
-        for i in start..source.len() {
-            if source[i] == needle {
+        for (i, &b) in source.iter().enumerate().skip(start) {
+            if b == needle {
                 return Some(i);
             }
         }

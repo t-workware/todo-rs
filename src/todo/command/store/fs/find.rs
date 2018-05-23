@@ -47,7 +47,7 @@ impl Find {
     fn is_hidden(entry: &DirEntry) -> bool {
         entry.file_name()
             .to_str()
-            .map(|s| s.len() > 1 && s.starts_with("."))
+            .map(|s| s.len() > 1 && s.starts_with('.'))
             .unwrap_or(false)
     }
 
@@ -114,10 +114,9 @@ impl Command for Find {
             let attr = FindAttr::by_key(key.as_str())
                 .expect(&format!("{} command has `{}` key, but not support this attr", stringify!(Find), key));
 
-            match attr {
-                FindAttr::Filter => self.filter = Some(Regex::new(&value)
-                    .expect(&format!("Invalid filter regular expression: {}", value))),
-                _ => ()
+            if let FindAttr::Filter = attr {
+                self.filter = Some(Regex::new(&value)
+                    .expect(&format!("Invalid filter regular expression: {}", value)))
             }
             self.attrs.set_attr_value(attr.key(), value);
             Ok(())

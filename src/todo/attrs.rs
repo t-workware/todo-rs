@@ -23,14 +23,14 @@ impl Attrs {
     pub fn find_key(&self, key: &str) -> Option<Rc<String>> {
         self.keys.iter()
             .find(|&item| item.as_str() == key)
-            .map(|item| item.clone())
+            .cloned()
     }
 
     pub fn key_by_alias(&self, alias: &str) -> Option<Rc<String>> {
         if let Some(key) = self.find_key(alias) {
             Some(key)
         } else {
-            self.aliases.get(alias).map(|key| key.clone())
+            self.aliases.get(alias).cloned()
         }
     }
 

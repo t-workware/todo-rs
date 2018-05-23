@@ -14,14 +14,12 @@ pub trait OsStrX {
 impl OsStrX for OsStr {
     #[inline]
     fn from_bytes(bytes: &[u8]) -> &Self {
-        use std::mem;
-        unsafe { mem::transmute(bytes) }
+        unsafe { &*(bytes as *const [u8] as *const OsStr) }
     }
 
     #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.as_str().as_bytes()
-
     }
 
     #[inline]
