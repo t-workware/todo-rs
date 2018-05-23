@@ -109,6 +109,8 @@ mod tests {
         assert_eq!(None, parser.parse_attr("test"));
         assert_eq!(None, parser.parse_attr("#[]"));
         assert_eq!(None, parser.parse_attr("#[key]"));
+        assert_eq!(Some(("key".to_string(), "".to_string())),
+                   parser.parse_attr("#[key:]"));
         assert_eq!(Some(("key".to_string(), "value".to_string())),
                    parser.parse_attr("#[key:value]"));
         assert_eq!(Some(("key".to_string(), "value".to_string())),
