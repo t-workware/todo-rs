@@ -11,12 +11,12 @@ extern crate failure;
 extern crate walkdir;
 
 use clap::{App, Arg, SubCommand};
-use types::Str;
+use lang::Str;
 use cmd::Cmd;
 use settings::Settings;
 
 mod todo;
-mod types;
+mod lang;
 mod cmd;
 mod settings;
 

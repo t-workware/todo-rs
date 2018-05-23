@@ -5,15 +5,19 @@ use failure::Error;
 use todo::attrs::Attrs;
 
 pub struct AttrParser {
-    pub regex: Regex,
+    pub attr_regex: Regex,
+    pub expr_regex: Regex,
 }
 
 impl AttrParser {
     pub fn new() -> Self {
-        let regex = r"^\#\[(?s)(?P<key>.+):(?P<value>.*)\]$";
+        let attr_regex = r"^\#\[(?s)(?P<key>.+):(?P<value>.*)\]$";
+        let expr_regex = r"^(?s)(?P<actual_value>.+)\s=\s(?P<expr>if\s.+)$";
         AttrParser {
-            regex: Regex::new(regex)
-                .expect(&format!("`{}` is not regular expression", regex))
+            attr_regex: Regex::new(attr_regex)
+                .expect(&format!("`{}` is not regular expression", attr_regex)),
+            expr_regex: Regex::new(expr_regex)
+                .expect(&format!("`{}` is not regular expression", expr_regex)),
         }
     }
 
@@ -29,7 +33,7 @@ impl AttrParser {
         where
             L: AsRef<str>,
     {
-        for cap in self.regex.captures_iter(line.as_ref()) {
+        for cap in self.attr_regex.captures_iter(line.as_ref()) {
             return Some((cap[1].trim().to_string(), cap[2].trim().to_string()));
         }
         None
@@ -46,13 +50,13 @@ impl AttrParser {
         }
     }
 
-    pub fn read_attrs<R>(&self, inner: R) -> Result<Vec<(String, String)>, Error>
+    pub fn read_attrs<R>(&self, source: R) -> Result<Vec<(String, String)>, Error>
         where
             R: Read,
     {
         let mut attrs = Vec::new();
 
-        let mut reader = BufReader::new(inner);
+        let mut reader = BufReader::new(source);
         let mut buf = Vec::<u8>::new();
         let mut attr = String::new();
         let mut open_brackets = 0;
@@ -93,6 +97,7 @@ impl AttrParser {
 
 #[cfg(test)]
 mod tests {
+    use todo::lang::ToStrings;
     use todo::attrs::Attrs;
     use super::*;
 
@@ -109,19 +114,19 @@ mod tests {
         assert_eq!(None, parser.parse_attr("test"));
         assert_eq!(None, parser.parse_attr("#[]"));
         assert_eq!(None, parser.parse_attr("#[key]"));
-        assert_eq!(Some(("key".to_string(), "".to_string())),
+        assert_eq!(Some(("key", "").to_strings()),
                    parser.parse_attr("#[key:]"));
-        assert_eq!(Some(("key".to_string(), "value".to_string())),
+        assert_eq!(Some(("key", "value").to_strings()),
                    parser.parse_attr("#[key:value]"));
-        assert_eq!(Some(("key".to_string(), "value".to_string())),
+        assert_eq!(Some(("key", "value").to_strings()),
                    parser.parse_attr("#[key: value]"));
-        assert_eq!(Some(("key".to_string(), "value".to_string())),
+        assert_eq!(Some(("key", "value").to_strings()),
                    parser.parse_attr("#[ key : value ]"));
-        assert_eq!(Some(("key".to_string(), "value".to_string())),
+        assert_eq!(Some(("key", "value").to_strings()),
                    parser.parse_attr("#[\tkey : \nvalue\n]"));
-        assert_eq!(Some(("key 1".to_string(), "value 1".to_string())),
+        assert_eq!(Some(("key 1", "value 1").to_strings()),
                    parser.parse_attr("#[key 1: value 1]"));
-        assert_eq!(Some(("key 1".to_string(), "[value 1, value 2]".to_string())),
+        assert_eq!(Some(("key 1", "[value 1, value 2]").to_strings()),
                    parser.parse_attr("#[key 1: [value 1, value 2]]"));
     }
 
@@ -159,40 +164,37 @@ mod tests {
 
     #[test]
     fn read_attrs() {
-        let as_attrs = |array: &[(&str, &str)]| {
-            array.iter().map(|x| (x.0.to_string(), x.1.to_string())).collect::<Vec<(String, String)>>()
-        };
         let parser = AttrParser::new();
 
         let source = "";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[]), attrs);
+        assert_eq!([].to_strings(), attrs);
 
         let source = "[key: value]";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[]), attrs);
+        assert_eq!([].to_strings(), attrs);
 
         let source = "#[key: value";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[]), attrs);
+        assert_eq!([].to_strings(), attrs);
 
         let source = "#[key: value]";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+        assert_eq!([("key", "value")].to_strings(), attrs);
 
         let source = "\n#[\nkey:\n value\n]\n";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+        assert_eq!([("key", "value")].to_strings(), attrs);
 
         let source = "#[key: value] // attr";
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[("key", "value")]), attrs);
+        assert_eq!([("key", "value")].to_strings(), attrs);
 
         let source = r#"
 #[key: value]
@@ -203,7 +205,7 @@ test
         "#;
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[("key", "value"), ("key 2", "value 2")]), attrs);
+        assert_eq!([("key", "value"), ("key 2", "value 2")].to_strings(), attrs);
 
         let source = r#"
 #[key: value []]
@@ -217,10 +219,10 @@ test
         "#;
         let attrs = parser.read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!(as_attrs(&[
+        assert_eq!([
             ("key", "value []"),
             ("key", "value [new]"),
             ("test", "[some\n[2]]")
-        ]), attrs);
+        ].to_strings(), attrs);
     }
 }

@@ -5,7 +5,7 @@ use todo::error::TodoError;
 use todo::issue::Issue;
 use todo::command::{Command, New, List};
 use todo::command::store::fs::{Create, Find};
-use types::{Str, OsStrX};
+use lang::{Str, OsStrX};
 
 
 pub struct Cmd {

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use config::{Config, File, Environment};
 use failure::Error;
 
-use types::Str;
+use lang::Str;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Issue {
