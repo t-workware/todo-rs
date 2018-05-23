@@ -12,7 +12,7 @@ pub struct AttrParser {
 impl AttrParser {
     pub fn new() -> Self {
         let attr_regex = r"^\#\[(?s)(?P<key>.+):(?P<value>.*)\]$";
-        let expr_regex = r"^(?s)(?P<actual_value>.+)\s=\s(?P<expr>if\s.+)$";
+        let expr_regex = r"^(?s)(?P<actual_value>.*)\s=\s(?P<expr>if\s.+)$";
         AttrParser {
             attr_regex: Regex::new(attr_regex)
                 .expect(&format!("`{}` is not regular expression", attr_regex)),
@@ -48,6 +48,16 @@ impl AttrParser {
         } else {
             None
         }
+    }
+
+    pub fn parse_value<V>(&self, value: V) -> (String, Option<String>)
+        where
+            V: Into<String> + AsRef<str>,
+    {
+        for cap in self.expr_regex.captures_iter(value.as_ref()) {
+            return (cap[1].trim().to_string(), Some(cap[2].trim().to_string()));
+        }
+        (value.into(), None)
     }
 
     pub fn read_attrs<R>(&self, source: R) -> Result<Vec<(String, String)>, Error>
@@ -160,6 +170,24 @@ mod tests {
             .map(String::as_str));
 
         assert_eq!(2, attrs.keys.len());
+    }
+
+    #[test]
+    fn parse_value() {
+        let parser = AttrParser::new();
+
+        assert_eq!(("", None).to_strings(), parser.parse_value(""));
+        assert_eq!((" = ", None).to_strings(), parser.parse_value(" = "));
+        assert_eq!(("test", None).to_strings(), parser.parse_value("test"));
+        assert_eq!(("test =", None).to_strings(), parser.parse_value("test ="));
+        assert_eq!(("test = some", None).to_strings(), parser.parse_value("test = some"));
+        assert_eq!(("test = if", None).to_strings(), parser.parse_value("test = if"));
+        assert_eq!(("test", Some("if cond")).to_strings(),
+                   parser.parse_value("test = if cond"));
+        assert_eq!(("true", Some("if some\nthen \"true\" else \"false\"")).to_strings(),
+                   parser.parse_value("true =\nif some\nthen \"true\" else \"false\"\n"));
+        assert_eq!(("", Some("if some\nthen \"true\" else \"\"")).to_strings(),
+                   parser.parse_value(" =\nif some\nthen \"true\" else \"\"\n"));
     }
 
     #[test]
