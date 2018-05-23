@@ -116,7 +116,7 @@ pub struct Settings {
 impl Settings {
     pub fn new() -> Result<Self, Error> {
         let config_file_name = env::var("TODO_CONFIG_FILE_NAME")
-            .unwrap_or("todo.toml".to_string());
+            .unwrap_or_else(|_|"todo.toml".to_string());
 
         let mut config = Config::new();
 

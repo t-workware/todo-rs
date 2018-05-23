@@ -87,7 +87,7 @@ impl AttrParser {
                                 attr += str::from_utf8(&buf[..(i + 1)])?;
                                 self.parse_attr(&attr)
                                     .map(|parsed_attr| attrs.push(parsed_attr))
-                                    .ok_or(format_err!("Can't parse attr `{}`", attr))?;
+                                    .ok_or_else(|| format_err!("Can't parse attr `{}`", attr))?;
                                 attr.clear();
                                 parsed = true;
                                 break;
