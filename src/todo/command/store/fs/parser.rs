@@ -236,19 +236,19 @@ mod tests {
         let attrs = parser
             .read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!([].to_strings(), attrs);
+        assert!(attrs.is_empty());
 
         let source = "[key: value]";
         let attrs = parser
             .read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!([].to_strings(), attrs);
+        assert!(attrs.is_empty());
 
         let source = "#[key: value";
         let attrs = parser
             .read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!([].to_strings(), attrs);
+        assert!(attrs.is_empty());
 
         let source = "#[key: value]";
         let attrs = parser

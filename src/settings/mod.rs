@@ -1,12 +1,12 @@
 pub mod setup;
 pub use self::setup::*;
 
-use config::{Config, Environment, File};
-use failure::Error;
 use std::collections::HashMap;
 use std::env;
 
-use lang::Str;
+use config::{Config, Environment, File};
+use failure::Error;
+use lang::{Str, ToStringsCollect};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Issue {
@@ -18,19 +18,12 @@ pub struct Issue {
 
 impl Default for Issue {
     fn default() -> Self {
-        let attrs = vec![
-            ("id".to_string(), vec!["i".to_string()]),
-            (
-                "priority".to_string(),
-                vec!["p".to_string(), "top".to_string(), "t".to_string()],
-            ),
-            ("scope".to_string(), vec!["s".to_string()]),
-            (
-                "name".to_string(),
-                vec!["n".to_string(), "title".to_string()],
-            ),
-        ].into_iter()
-            .collect();
+        let attrs = [
+            ("id", &["i"][..]),
+            ("priority", &["p", "top", "t"][..]),
+            ("scope", &["s"][..]),
+            ("name", &["n", "title"][..]),
+        ].to_strings_collect();
 
         Issue {
             attrs,
@@ -53,9 +46,7 @@ pub struct FsStore {
 
 impl Default for FsStore {
     fn default() -> Self {
-        let attrs = vec![("all".to_string(), vec!["a".to_string()])]
-            .into_iter()
-            .collect();
+        let attrs = [("all", &["a"][..])].to_strings_collect();
 
         FsStore {
             attrs,
