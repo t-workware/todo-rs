@@ -12,12 +12,11 @@ pub struct Attrs {
 
 impl Attrs {
     pub fn add_key(&mut self, key: &str) -> Rc<String> {
-        self.find_key(key)
-            .unwrap_or_else(|| {
-                let key = Rc::new(key.to_string());
-                self.keys.push(key.clone());
-                key
-            })
+        self.find_key(key).unwrap_or_else(|| {
+            let key = Rc::new(key.to_string());
+            self.keys.push(key.clone());
+            key
+        })
     }
 
     pub fn find_key(&self, key: &str) -> Option<Rc<String>> {
@@ -34,7 +33,10 @@ impl Attrs {
         }
     }
 
-    pub fn add_aliases<A: AsRef<str>>(&mut self, key: &str, aliases: &[A]) -> Result<(), TodoError> {
+    pub fn add_aliases<A>(&mut self, key: &str, aliases: &[A]) -> Result<(), TodoError>
+    where
+        A: AsRef<str>,
+    {
         if let Some(key) = self.find_key(key) {
             for alias in aliases {
                 let alias = alias.as_ref().to_string();

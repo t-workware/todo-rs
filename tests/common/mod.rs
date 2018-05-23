@@ -1,4 +1,3 @@
-
 #[macro_export]
 macro_rules! target_path {
     ($path:tt) => {
@@ -9,29 +8,25 @@ macro_rules! target_path {
 #[macro_export]
 macro_rules! delete_file {
     ($path:tt) => {
-        ::std::fs::remove_file($path)
-            .expect(&format!("File: {} can not delete.", $path));
+        ::std::fs::remove_file($path).expect(&format!("File: {} can not delete.", $path));
     };
 }
 
 #[macro_export]
 macro_rules! create_file {
-    ($path:tt, $content:tt) => {
-        {
-            use ::std::fs;
-            use ::std::io::Write;
-            use ::std::path::Path;
+    ($path:tt, $content:tt) => {{
+        use std::fs;
+        use std::io::Write;
+        use std::path::Path;
 
-            let path = Path::new($path);
-            if let Some(dir) = path.parent() {
-                fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
-            }
-            let mut file = fs::File::create(path)
-                .expect(&format!("File: {:?} can not create.", path));
-            file.write_all($content.as_bytes())
-                .expect(&format!("File: {:?} wrong content write.", path));
+        let path = Path::new($path);
+        if let Some(dir) = path.parent() {
+            fs::create_dir_all(dir).expect(&format!("Can't create dir: {:?}", dir));
         }
-    };
+        let mut file = fs::File::create(path).expect(&format!("File: {:?} can not create.", path));
+        file.write_all($content.as_bytes())
+            .expect(&format!("File: {:?} wrong content write.", path));
+    }};
 }
 
 #[macro_export]
@@ -141,15 +136,15 @@ pub fn split_args(line: &str) -> Vec<String> {
                     push_arg(&mut args, &line.as_bytes()[start..index]);
                     start = index + 1;
                 }
-            },
+            }
             b'"' | b'\'' => {
                 if quote_bch == 0 {
                     quote_bch = bch;
                 } else if quote_bch == bch {
                     quote_bch = 0;
                 }
-            },
-            _ => ()
+            }
+            _ => (),
         }
     }
     push_arg(&mut args, &line.as_bytes()[start..]);
@@ -158,20 +153,17 @@ pub fn split_args(line: &str) -> Vec<String> {
 
 #[macro_export]
 macro_rules! assert_content {
-    ($path:tt, $content:tt) => {
-        {
-            use ::std::fs;
-            use ::std::io::Read;
-            use ::std::path::Path;
+    ($path:tt, $content:tt) => {{
+        use std::fs;
+        use std::io::Read;
+        use std::path::Path;
 
-            let path = Path::new($path);
-            let mut file = fs::File::open(path)
-                .expect(&format!("File: {:?} can not open.", path));
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)
-                .expect(&format!("File: {:?} wrong content reading.", path));
+        let path = Path::new($path);
+        let mut file = fs::File::open(path).expect(&format!("File: {:?} can not open.", path));
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)
+            .expect(&format!("File: {:?} wrong content reading.", path));
 
-            assert_eq!($content, contents);
-        }
-    };
+        assert_eq!($content, contents);
+    }};
 }

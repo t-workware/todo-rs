@@ -37,9 +37,6 @@ impl OsStrX for OsStr {
                 );
             }
         }
-        (
-            OsStr::new(""),
-            &*self,
-        )
+        (OsStr::new(""), &*self)
     }
 }

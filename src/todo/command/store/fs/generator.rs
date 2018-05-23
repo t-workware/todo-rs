@@ -1,6 +1,6 @@
+use failure::Error;
 use std::fs;
 use std::io::{Read, Write};
-use failure::Error;
 use todo::error::TodoError;
 
 #[derive(Clone, Debug, Default)]
@@ -20,12 +20,14 @@ impl SequenceGenerator {
                         Ok(mut file) => {
                             file.read_to_string(&mut contents)?;
                             contents.trim().to_string()
-                        },
-                        Err(err) => return if self.required {
-                            Err(err.into())
-                        } else {
-                            Ok("".to_string())
-                        },
+                        }
+                        Err(err) => {
+                            return if self.required {
+                                Err(err.into())
+                            } else {
+                                Ok("".to_string())
+                            }
+                        }
                     }
                 };
                 let new_id = format!("{}", id.parse::<u64>()? + 1);
@@ -34,9 +36,9 @@ impl SequenceGenerator {
                 file.write_all(new_id.as_bytes())?;
 
                 Ok(id)
-            },
+            }
             None if self.required => Err(TodoError::FileNotSpecified.into()),
-            _ => Ok("".to_string())
+            _ => Ok("".to_string()),
         }
     }
 }

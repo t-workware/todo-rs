@@ -1,11 +1,11 @@
 use std::fs;
-use std::path::Path;
 use std::io::Write;
+use std::path::Path;
 use todo::attrs::Attrs;
-use todo::error::TodoError;
-use todo::command::Command;
+use todo::command::store::fs::{AttrParser, Format, SequenceGenerator};
 use todo::command::store::Create as CanCreate;
-use todo::command::store::fs::{Format, SequenceGenerator, AttrParser};
+use todo::command::Command;
+use todo::error::TodoError;
 use todo::issue::{Content, Issue};
 
 #[derive(Clone, Debug, Default)]
@@ -46,7 +46,11 @@ impl Command for Create {
     fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
         if let Some(key) = self.attrs.key_by_alias(param.to_lowercase().as_str()) {
             let attr = CreateAttr::by_key(key.as_str())
-                .expect(&format!("{} command has `{}` key, but not support this attr", stringify!(Create), key));
+                .expect(&format!(
+                    "{} command has `{}` key, but not support this attr",
+                    stringify!(Create),
+                    key
+                ));
 
             self.attrs.set_attr_value(attr.key(), value);
             Ok(())
@@ -81,12 +85,15 @@ impl Command for Create {
 
 impl CanCreate for Create {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
-        let mut format = self.attrs.attr_value_as_str(CreateAttr::Format.key()).to_string();
+        let mut format = self.attrs
+            .attr_value_as_str(CreateAttr::Format.key())
+            .to_string();
 
         let mut id = issue.get_id().cloned().unwrap_or_default();
 
         if let Some(ref generator) = self.id_generator {
-            let id_found = format.find(&issue.id_attr_key)
+            let id_found = format
+                .find(&issue.id_attr_key)
                 .and_then(|pos| format.key_replaceable_pos(pos, issue.id_attr_key.len()))
                 .is_some();
             if id_found && issue.get_id().is_none() {
@@ -95,7 +102,10 @@ impl CanCreate for Create {
         }
 
         format.key_replace(&issue.id_attr_key, id.as_str());
-        format.key_replace(CreateAttr::Ext.key(), self.attrs.attr_value_as_str(CreateAttr::Ext.key()));
+        format.key_replace(
+            CreateAttr::Ext.key(),
+            self.attrs.attr_value_as_str(CreateAttr::Ext.key()),
+        );
         for key in &issue.attrs.keys {
             let key = key.as_str();
             if key != issue.id_attr_key {

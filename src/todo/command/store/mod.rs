@@ -8,5 +8,4 @@ pub trait Create: Command {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>);
 }
 
-pub trait Find: Command {
-}
+pub trait Find: Command {}

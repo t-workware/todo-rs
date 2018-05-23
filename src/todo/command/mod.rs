@@ -1,9 +1,9 @@
-pub mod new;
 pub mod list;
+pub mod new;
 pub mod store;
 
-pub use self::new::*;
 pub use self::list::*;
+pub use self::new::*;
 
 use todo::error::TodoError;
 

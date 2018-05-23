@@ -102,7 +102,9 @@ impl Format for String {
                 };
 
                 let after = if index + key.len() + 1 < end {
-                    String::from_utf8_lossy(&self.as_bytes()[(index + key.len() + 1)..end]).to_string()
+                    String::from_utf8_lossy(
+                        &self.as_bytes()[(index + key.len() + 1)..end]
+                    ).to_string()
                 } else {
                     "".to_string()
                 };

@@ -1,10 +1,10 @@
 pub mod setup;
 pub use self::setup::*;
 
-use std::env;
-use std::collections::HashMap;
-use config::{Config, File, Environment};
+use config::{Config, Environment, File};
 use failure::Error;
+use std::collections::HashMap;
+use std::env;
 
 use lang::Str;
 
@@ -20,10 +20,17 @@ impl Default for Issue {
     fn default() -> Self {
         let attrs = vec![
             ("id".to_string(), vec!["i".to_string()]),
-            ("priority".to_string(), vec!["p".to_string(), "top".to_string(), "t".to_string()]),
+            (
+                "priority".to_string(),
+                vec!["p".to_string(), "top".to_string(), "t".to_string()],
+            ),
             ("scope".to_string(), vec!["s".to_string()]),
-            ("name".to_string(), vec!["n".to_string(), "title".to_string()]),
-        ].into_iter().collect();
+            (
+                "name".to_string(),
+                vec!["n".to_string(), "title".to_string()],
+            ),
+        ].into_iter()
+            .collect();
 
         Issue {
             attrs,
@@ -46,9 +53,9 @@ pub struct FsStore {
 
 impl Default for FsStore {
     fn default() -> Self {
-        let attrs = vec![
-            ("all".to_string(), vec!["a".to_string()]),
-        ].into_iter().collect();
+        let attrs = vec![("all".to_string(), vec!["a".to_string()])]
+            .into_iter()
+            .collect();
 
         FsStore {
             attrs,
@@ -56,14 +63,14 @@ impl Default for FsStore {
             find_all: false,
             issues_dir: "issues".to_string(),
             ext: "md".to_string(),
-            id_generator: String::default()
+            id_generator: String::default(),
         }
     }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MongoStore {
-    uri: Option<String>
+    uri: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -74,7 +81,7 @@ pub struct Store {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Generator {
-    pub sequence: SequenceGenerator
+    pub sequence: SequenceGenerator,
 }
 
 impl Generator {
@@ -91,7 +98,7 @@ impl Default for SequenceGenerator {
     fn default() -> Self {
         SequenceGenerator {
             required: false,
-            file: "todo.seq".to_string()
+            file: "todo.seq".to_string(),
         }
     }
 }
@@ -114,7 +121,6 @@ pub struct Settings {
     pub command: Command,
     pub generator: Generator,
 }
-
 
 impl Settings {
     pub fn new() -> Result<Self, Error> {

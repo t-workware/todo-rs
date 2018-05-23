@@ -1,4 +1,3 @@
-
 pub trait ToStrings<T> {
     fn to_strings(&self) -> T;
 }

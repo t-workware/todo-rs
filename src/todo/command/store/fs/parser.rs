@@ -1,7 +1,7 @@
-use std::str;
-use std::io::{Read, BufRead, BufReader};
-use regex::Regex;
 use failure::Error;
+use regex::Regex;
+use std::io::{BufRead, BufReader, Read};
+use std::str;
 use todo::attrs::Attrs;
 
 pub struct AttrParser {
@@ -22,16 +22,16 @@ impl AttrParser {
     }
 
     pub fn encode_attr<K, V>(key: K, value: V) -> String
-        where
-            K: AsRef<str>,
-            V: AsRef<str>,
+    where
+        K: AsRef<str>,
+        V: AsRef<str>,
     {
         format!("#[{}: {}]", key.as_ref(), value.as_ref())
     }
 
     pub fn parse_attr<L>(&self, line: L) -> Option<(String, String)>
-        where
-            L: AsRef<str>,
+    where
+        L: AsRef<str>,
     {
         if let Some(cap) = self.attr_regex.captures_iter(line.as_ref()).next() {
             Some((cap[1].trim().to_string(), cap[2].trim().to_string()))
@@ -41,8 +41,8 @@ impl AttrParser {
     }
 
     pub fn parse_and_set_attr<L>(&self, line: L, attrs: &mut Attrs) -> Option<String>
-        where
-            L: AsRef<str>
+    where
+        L: AsRef<str>,
     {
         if let Some((key, value)) = self.parse_attr(line) {
             attrs.set_attr_value(key.as_str(), value)
@@ -52,8 +52,8 @@ impl AttrParser {
     }
 
     pub fn parse_value<V>(&self, value: V) -> (String, Option<String>)
-        where
-            V: Into<String> + AsRef<str>,
+    where
+        V: Into<String> + AsRef<str>,
     {
         if let Some(cap) = self.expr_regex.captures_iter(value.as_ref()).next() {
             return (cap[1].trim().to_string(), Some(cap[2].trim().to_string()));
@@ -62,8 +62,8 @@ impl AttrParser {
     }
 
     pub fn read_attrs<R>(&self, source: R) -> Result<Vec<(String, String)>, Error>
-        where
-            R: Read,
+    where
+        R: Read,
     {
         let mut attrs = Vec::new();
 
@@ -79,7 +79,7 @@ impl AttrParser {
                     match bch {
                         b'[' => {
                             open_brackets += 1;
-                        },
+                        }
                         b']' => {
                             open_brackets -= 1;
 
@@ -92,7 +92,7 @@ impl AttrParser {
                                 parsed = true;
                                 break;
                             }
-                        },
+                        }
                         _ => {}
                     }
                 }
@@ -108,14 +108,17 @@ impl AttrParser {
 
 #[cfg(test)]
 mod tests {
-    use todo::lang::ToStrings;
-    use todo::attrs::Attrs;
     use super::*;
+    use todo::attrs::Attrs;
+    use todo::lang::ToStrings;
 
     #[test]
     fn encode_attr() {
         assert_eq!("#[key: value]", AttrParser::encode_attr("key", "value"));
-        assert_eq!("#[key 1: value 1, value 2]", AttrParser::encode_attr("key 1", "value 1, value 2"));
+        assert_eq!(
+            "#[key 1: value 1, value 2]",
+            AttrParser::encode_attr("key 1", "value 1, value 2")
+        );
     }
 
     #[test]
@@ -125,20 +128,34 @@ mod tests {
         assert_eq!(None, parser.parse_attr("test"));
         assert_eq!(None, parser.parse_attr("#[]"));
         assert_eq!(None, parser.parse_attr("#[key]"));
-        assert_eq!(Some(("key", "").to_strings()),
-                   parser.parse_attr("#[key:]"));
-        assert_eq!(Some(("key", "value").to_strings()),
-                   parser.parse_attr("#[key:value]"));
-        assert_eq!(Some(("key", "value").to_strings()),
-                   parser.parse_attr("#[key: value]"));
-        assert_eq!(Some(("key", "value").to_strings()),
-                   parser.parse_attr("#[ key : value ]"));
-        assert_eq!(Some(("key", "value").to_strings()),
-                   parser.parse_attr("#[\tkey : \nvalue\n]"));
-        assert_eq!(Some(("key 1", "value 1").to_strings()),
-                   parser.parse_attr("#[key 1: value 1]"));
-        assert_eq!(Some(("key 1", "[value 1, value 2]").to_strings()),
-                   parser.parse_attr("#[key 1: [value 1, value 2]]"));
+        assert_eq!(
+            Some(("key", "").to_strings()),
+            parser.parse_attr("#[key:]")
+        );
+        assert_eq!(
+            Some(("key", "value").to_strings()),
+            parser.parse_attr("#[key:value]")
+        );
+        assert_eq!(
+            Some(("key", "value").to_strings()),
+            parser.parse_attr("#[key: value]")
+        );
+        assert_eq!(
+            Some(("key", "value").to_strings()),
+            parser.parse_attr("#[ key : value ]")
+        );
+        assert_eq!(
+            Some(("key", "value").to_strings()),
+            parser.parse_attr("#[\tkey : \nvalue\n]")
+        );
+        assert_eq!(
+            Some(("key 1", "value 1").to_strings()),
+            parser.parse_attr("#[key 1: value 1]")
+        );
+        assert_eq!(
+            Some(("key 1", "[value 1, value 2]").to_strings()),
+            parser.parse_attr("#[key 1: [value 1, value 2]]")
+        );
     }
 
     #[test]
@@ -154,21 +171,29 @@ mod tests {
         assert_eq!(0, attrs.keys.len());
 
         assert_eq!(None, parser.parse_and_set_attr("#[key: value]", &mut attrs));
-        assert_eq!(Some("value"), attrs.attr_value("key")
-            .map(String::as_str));
+        assert_eq!(Some("value"), attrs.attr_value("key").map(String::as_str));
 
         assert_eq!(1, attrs.keys.len());
 
-        assert_eq!(Some("value"), parser.parse_and_set_attr("#[ key :  value 2 ]", &mut attrs)
-            .as_ref().map(String::as_str));
-        assert_eq!(Some("value 2"), attrs.attr_value("key")
-            .map(String::as_str));
+        assert_eq!(
+            Some("value"),
+            parser
+                .parse_and_set_attr("#[ key :  value 2 ]", &mut attrs)
+                .as_ref()
+                .map(String::as_str)
+        );
+        assert_eq!(Some("value 2"), attrs.attr_value("key").map(String::as_str));
 
         assert_eq!(1, attrs.keys.len());
 
-        assert_eq!(None, parser.parse_and_set_attr("#[key 1: [1, 2]]", &mut attrs));
-        assert_eq!(Some("[1, 2]"), attrs.attr_value("key 1")
-            .map(String::as_str));
+        assert_eq!(
+            None,
+            parser.parse_and_set_attr("#[key 1: [1, 2]]", &mut attrs)
+        );
+        assert_eq!(
+            Some("[1, 2]"),
+            attrs.attr_value("key 1").map(String::as_str)
+        );
 
         assert_eq!(2, attrs.keys.len());
     }
@@ -181,14 +206,26 @@ mod tests {
         assert_eq!((" = ", None).to_strings(), parser.parse_value(" = "));
         assert_eq!(("test", None).to_strings(), parser.parse_value("test"));
         assert_eq!(("test =", None).to_strings(), parser.parse_value("test ="));
-        assert_eq!(("test = some", None).to_strings(), parser.parse_value("test = some"));
-        assert_eq!(("test = if", None).to_strings(), parser.parse_value("test = if"));
-        assert_eq!(("test", Some("if cond")).to_strings(),
-                   parser.parse_value("test = if cond"));
-        assert_eq!(("true", Some("if some\nthen \"true\" else \"false\"")).to_strings(),
-                   parser.parse_value("true =\nif some\nthen \"true\" else \"false\"\n"));
-        assert_eq!(("", Some("if some\nthen \"true\" else \"\"")).to_strings(),
-                   parser.parse_value(" =\nif some\nthen \"true\" else \"\"\n"));
+        assert_eq!(
+            ("test = some", None).to_strings(),
+            parser.parse_value("test = some")
+        );
+        assert_eq!(
+            ("test = if", None).to_strings(),
+            parser.parse_value("test = if")
+        );
+        assert_eq!(
+            ("test", Some("if cond")).to_strings(),
+            parser.parse_value("test = if cond")
+        );
+        assert_eq!(
+            ("true", Some("if some\nthen \"true\" else \"false\"")).to_strings(),
+            parser.parse_value("true =\nif some\nthen \"true\" else \"false\"\n")
+        );
+        assert_eq!(
+            ("", Some("if some\nthen \"true\" else \"\"")).to_strings(),
+            parser.parse_value(" =\nif some\nthen \"true\" else \"\"\n")
+        );
     }
 
     #[test]
@@ -196,32 +233,38 @@ mod tests {
         let parser = AttrParser::new();
 
         let source = "";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([].to_strings(), attrs);
 
         let source = "[key: value]";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([].to_strings(), attrs);
 
         let source = "#[key: value";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([].to_strings(), attrs);
 
         let source = "#[key: value]";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([("key", "value")].to_strings(), attrs);
 
         let source = "\n#[\nkey:\n value\n]\n";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([("key", "value")].to_strings(), attrs);
 
         let source = "#[key: value] // attr";
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([("key", "value")].to_strings(), attrs);
 
@@ -232,7 +275,8 @@ test
 #[key 2: value 2] // new value
  #[test 2: some 2]
         "#;
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
         assert_eq!([("key", "value"), ("key 2", "value 2")].to_strings(), attrs);
 
@@ -246,12 +290,16 @@ test
 [some
 [2]]]
         "#;
-        let attrs = parser.read_attrs(source.as_bytes())
+        let attrs = parser
+            .read_attrs(source.as_bytes())
             .expect("Read attrs error");
-        assert_eq!([
-            ("key", "value []"),
-            ("key", "value [new]"),
-            ("test", "[some\n[2]]")
-        ].to_strings(), attrs);
+        assert_eq!(
+            [
+                ("key", "value []"),
+                ("key", "value [new]"),
+                ("test", "[some\n[2]]")
+            ].to_strings(),
+            attrs
+        );
     }
 }

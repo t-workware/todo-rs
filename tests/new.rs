@@ -16,7 +16,9 @@ fn create_new_issue() {
         ] => "issues/task1.md"
     );
 
-    create_file!("target/test_new/todo.toml", r#"
+    create_file!(
+        "target/test_new/todo.toml",
+        r#"
 [store.fs]
 issues_dir = "target/test_new/tasks"
 format = "{scope:/}{priority:.}{id:.}{name}{.:ext}"
@@ -63,14 +65,22 @@ file = "target/test_new/todo.seq"
     );
 
     run!("todo -n t:A s:cur i:ID context:test task");
-    assert_content!("target/test_new/tasks/cur/A.ID.task.md", "#[context: test]\n");
+    assert_content!(
+        "target/test_new/tasks/cur/A.ID.task.md",
+        "#[context: test]\n"
+    );
     delete_file!("target/test_new/tasks/cur/A.ID.task.md");
 
     run!("todo -n p: s: i: context:test time:\"2 free\" task");
-    assert_content!("target/test_new/tasks/task.md", "#[context: test]\n#[time: 2 free]\n");
+    assert_content!(
+        "target/test_new/tasks/task.md",
+        "#[context: test]\n#[time: 2 free]\n"
+    );
     delete_file!("target/test_new/tasks/task.md");
 
-    create_file!("target/test_new/todo.toml", r#"
+    create_file!(
+        "target/test_new/todo.toml",
+        r#"
 [store.fs]
 issues_dir = "target/test_new/tasks"
 format = "{scope:/}{name}{.:ext}"
@@ -91,6 +101,9 @@ priority = "B"
     );
 
     run!("todo new s: id: ctx:test a:User title:task");
-    assert_content!("target/test_new/tasks/task.md", "#[context: test]\n#[assign: User]\n#[priority: B]\n");
+    assert_content!(
+        "target/test_new/tasks/task.md",
+        "#[context: test]\n#[assign: User]\n#[priority: B]\n"
+    );
     delete_file!("target/test_new/tasks/task.md");
 }

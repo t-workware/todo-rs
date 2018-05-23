@@ -14,7 +14,7 @@ impl Content for String {
 pub struct Issue<T: Content> {
     pub id_attr_key: String,
     pub attrs: Attrs,
-    pub content: Option<T>
+    pub content: Option<T>,
 }
 
 impl<T: Content> Issue<T> {

@@ -1,21 +1,23 @@
-use std::result::Result;
 use std::mem;
+use std::result::Result;
 
-use todo::error::TodoError;
-use todo::command::Command;
-use todo::issue::Issue;
 use todo::command::store::Create;
+use todo::command::Command;
+use todo::error::TodoError;
+use todo::issue::Issue;
 
 #[derive(Clone, Debug, Default)]
 pub struct New<T>
-    where T: Create
+where
+    T: Create,
 {
     pub create: Option<T>,
     pub issue: Issue<String>,
 }
 
 impl<T> Command for New<T>
-    where T: Create
+where
+    T: Create,
 {
     fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
         if !param.is_empty() {
@@ -39,6 +41,7 @@ impl<T> Command for New<T>
     fn exec(&mut self) {
         let mut create = mem::replace(&mut self.create, None)
             .expect("Create command not exist");
+
         create.init_from(&self.issue);
         create.exec();
         self.create = Some(create);

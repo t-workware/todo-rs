@@ -1,12 +1,12 @@
-use std::path::Path;
-use std::ffi::OsStr;
-use regex::Regex;
-use walkdir::{DirEntry, WalkDir};
 use failure::Error;
+use regex::Regex;
+use std::ffi::OsStr;
+use std::path::Path;
 use todo::attrs::Attrs;
-use todo::command::Command;
 use todo::command::store::Find as CanFind;
+use todo::command::Command;
 use todo::error::TodoError;
+use walkdir::{DirEntry, WalkDir};
 
 #[derive(Clone, Debug)]
 pub struct Find {
@@ -45,14 +45,16 @@ impl FindAttr {
 
 impl Find {
     fn is_hidden(entry: &DirEntry) -> bool {
-        entry.file_name()
+        entry
+            .file_name()
             .to_str()
             .map(|s| s.len() > 1 && s.starts_with('.'))
             .unwrap_or(false)
     }
 
     pub fn all(&self) -> bool {
-        self.attrs.attr_value(FindAttr::All.key())
+        self.attrs
+            .attr_value(FindAttr::All.key())
             .map(|value| {
                 !["false", "f", "not", "no", "n", "0"].contains(&value.to_lowercase().as_str())
             })
@@ -65,18 +67,23 @@ impl Find {
             .into_iter();
         let issues_dir = OsStr::new(self.attrs.attr_value_as_str(FindAttr::IssuesDir.key()));
 
-        for entry in walker.filter_entry(|e|
-            self.all() || !Find::is_hidden(e)
+        for entry in walker.filter_entry(
+            |e| self.all() || !Find::is_hidden(e)
         ) {
             let entry = entry?;
             if entry.file_type().is_file() {
                 for chunk in entry.path().iter() {
                     if issues_dir.is_empty() || chunk == issues_dir {
-                        if let Some(path) = match entry.path().strip_prefix("./") {
+                        let maybe_path = match entry.path().strip_prefix("./") {
                             Ok(path) => path,
-                            _ => entry.path()
-                        }.as_os_str().to_str() {
-                            if self.filter.is_none() || self.filter.as_ref().unwrap().is_match(path) {
+                            _ => entry.path(),
+                        }.as_os_str()
+                            .to_str();
+
+                        if let Some(path) = maybe_path {
+                            if self.filter.is_none()
+                                || self.filter.as_ref().unwrap().is_match(path)
+                            {
                                 println!("{}", path);
                             }
                             break;
@@ -101,7 +108,7 @@ impl Default for Find {
 
         Find {
             attrs,
-            filter: Default::default()
+            filter: Default::default(),
         }
     }
 }
@@ -112,11 +119,17 @@ impl Command for Find {
     fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
         if let Some(key) = self.attrs.key_by_alias(param.to_lowercase().as_str()) {
             let attr = FindAttr::by_key(key.as_str())
-                .expect(&format!("{} command has `{}` key, but not support this attr", stringify!(Find), key));
+                .expect(&format!(
+                    "{} command has `{}` key, but not support this attr",
+                    stringify!(Find),
+                    key
+                ));
 
             if let FindAttr::Filter = attr {
-                self.filter = Some(Regex::new(&value)
-                    .expect(&format!("Invalid filter regular expression: {}", value)))
+                self.filter = Some(
+                    Regex::new(&value)
+                        .expect(&format!("Invalid filter regular expression: {}", value)),
+                )
             }
             self.attrs.set_attr_value(attr.key(), value);
             Ok(())
