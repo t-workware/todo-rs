@@ -6,7 +6,8 @@ use std::{env, fs};
 #[test]
 fn create_new_issue() {
     env::set_var("TODO_HOME", "./");
-    let _ = fs::remove_dir_all("target/test_new");
+    fs::remove_dir_all("target/test_new")
+        .expect("Can't remove test_new dir");
 
     assert_create_file!(
         [
@@ -16,9 +17,7 @@ fn create_new_issue() {
         ] => "issues/task1.md"
     );
 
-    create_file!(
-        "target/test_new/todo.toml",
-        r#"
+    create_file!("target/test_new/todo.toml", r#"
 [store.fs]
 issues_dir = "target/test_new/tasks"
 format = "{scope:/}{priority:.}{id:.}{name}{.:ext}"
@@ -78,9 +77,7 @@ file = "target/test_new/todo.seq"
     );
     delete_file!("target/test_new/tasks/task.md");
 
-    create_file!(
-        "target/test_new/todo.toml",
-        r#"
+    create_file!("target/test_new/todo.toml", r#"
 [store.fs]
 issues_dir = "target/test_new/tasks"
 format = "{scope:/}{name}{.:ext}"
