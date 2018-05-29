@@ -9,6 +9,10 @@ fn create_new_issue() {
     fs::remove_dir_all("target/test_new")
         .expect("Can't remove test_new dir");
 
+    //
+    // Testing creation by name
+    //
+
     assert_create_file!(
         [
             "todo new task1",
@@ -16,6 +20,10 @@ fn create_new_issue() {
             "todo -n task1"
         ] => "issues/task1.md"
     );
+
+    //
+    // Testing creation with default attrs
+    //
 
     create_file!("target/test_new/todo.toml", r#"
 [store.fs]
@@ -41,6 +49,11 @@ file = "target/test_new/todo.seq"
         "todo --new task1" => "target/test_new/tasks/new/B.2.task1.md",
         "todo -n task1" => "target/test_new/tasks/new/B.3.task1.md"
     );
+
+    //
+    // Testing creation with described attrs
+    //
+
     assert_create_file!(
         [
             "todo new top:A scope:cur id:ID ext:txt name:\"task 1\"",
@@ -63,6 +76,10 @@ file = "target/test_new/todo.seq"
         "todo new t:C s:\"\" task" => "target/test_new/tasks/C.5.task.md"
     );
 
+    //
+    // Testing creation with new attrs
+    //
+
     run!("todo -n t:A s:cur i:ID context:test task");
     assert_content!(
         "target/test_new/tasks/cur/A.ID.task.md",
@@ -76,6 +93,10 @@ file = "target/test_new/todo.seq"
         "#[context: test]\n#[time: 2 free]\n"
     );
     delete_file!("target/test_new/tasks/task.md");
+
+    //
+    // Testing creation with custom attrs aliases
+    //
 
     create_file!("target/test_new/todo.toml", r#"
 [store.fs]
