@@ -97,7 +97,7 @@ priority = "B"
 "#
     );
 
-    run!("todo new s: id: ctx:test a:User title:task");
+    run!("todo new ctx:test a:User title:task");
     assert_content!(
         "target/test_new/tasks/task.md",
         "#[context: test]\n#[assign: User]\n#[priority: B]\n"
