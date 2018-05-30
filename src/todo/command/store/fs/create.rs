@@ -89,26 +89,27 @@ impl CanCreate for Create {
             .attr_value_as_str(CreateAttr::Format.key())
             .to_string();
 
-        let mut id = issue.get_id().cloned().unwrap_or_default();
+        let id_found = format
+            .find(&issue.id_attr_key)
+            .and_then(|pos| format.key_replaceable_pos(pos, issue.id_attr_key.len()))
+            .is_some();
 
-        if let Some(ref generator) = self.id_generator {
-            let id_found = format
-                .find(&issue.id_attr_key)
-                .and_then(|pos| format.key_replaceable_pos(pos, issue.id_attr_key.len()))
-                .is_some();
-            if id_found && issue.get_id().is_none() {
-                id = generator.next().expect("Generate next id fail");
-            }
+        if id_found {
+            let id = match self.id_generator {
+                Some(ref generator) if issue.get_id().is_none() =>
+                    generator.next().expect("Generate next id fail"),
+                _ => issue.get_id().cloned().unwrap_or_default(),
+            };
+            format.key_replace(&issue.id_attr_key, id.as_str());
         }
 
-        format.key_replace(&issue.id_attr_key, id.as_str());
         format.key_replace(
             CreateAttr::Ext.key(),
             self.attrs.attr_value_as_str(CreateAttr::Ext.key()),
         );
         for key in &issue.attrs.keys {
             let key = key.as_str();
-            if key != issue.id_attr_key {
+            if !id_found || key != issue.id_attr_key {
                 let value = issue.attrs.attr_value_as_str(key);
                 if !format.key_replace(key, value) {
                     self.content += &format!("{}\n", AttrParser::encode_attr(key, value));
