@@ -111,7 +111,7 @@ impl CanCreate for Create {
             let key = key.as_str();
             if !id_found || key != issue.id_attr_key {
                 let value = issue.attrs.attr_value_as_str(key);
-                if !format.key_replace(key, value) {
+                if !format.key_replace(key, value) && !value.is_empty() {
                     self.content += &format!("{}\n", AttrParser::encode_attr(key, value));
                 }
             }

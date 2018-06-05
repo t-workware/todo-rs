@@ -75,3 +75,32 @@ macro_rules! vec_s {
     );
     ($($x:expr,)*) => (vec![$($x),*])
 }
+
+
+pub trait AsStrs<T> {
+    fn as_strs(&self) -> T;
+}
+
+impl<'a, 'b> AsStrs<(&'a str, &'b str)> for (&'a String, &'b String) {
+    fn as_strs(&self) -> (&'a str, &'b str) {
+        (self.0.as_str(), self.1.as_str())
+    }
+}
+
+impl<'a, 'b> AsStrs<Option<(&'a str, &'b str)>> for Option<(&'a String, &'b String)> {
+    fn as_strs(&self) -> Option<(&'a str, &'b str)> {
+        self.as_ref().map(AsStrs::<(&str, &str)>::as_strs)
+    }
+}
+
+
+pub trait VecX<T: PartialEq> {
+    fn remove_element(&mut self, item: &T) -> Option<T>;
+}
+
+impl<T: PartialEq> VecX<T> for Vec<T> {
+    fn remove_element(&mut self, item: &T) -> Option<T> {
+        let pos = self.iter().position(|x| *x == *item)?;
+        Some(self.remove(pos))
+    }
+}

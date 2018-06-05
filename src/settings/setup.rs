@@ -15,7 +15,7 @@ where
         if let Some(attrs_order) = attrs_order {
             for attr in attrs_order {
                 if let Some(aliases) = settings.issue.attrs.get(attr) {
-                    let key = self.attrs.add_key(attr.as_str());
+                    let key = self.attrs.add_keep_order_key(attr.as_str());
                     self.attrs
                         .add_aliases(key.as_str(), aliases)
                         .expect("Setup ordered aliases error");

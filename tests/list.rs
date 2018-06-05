@@ -6,7 +6,12 @@ use std::{env, fs};
 #[test]
 fn list_issues() {
     env::set_var("TODO_HOME", "./");
-    let _ = fs::remove_dir_all("target/test_list");
+    fs::remove_dir_all("target/test_list")
+        .expect("Can't remove test_list dir");
+
+    //
+    // Test simple listing
+    //
 
     create_file!("target/test_list/issues/task1.md", "");
 
@@ -41,6 +46,10 @@ target/test_list/issues/task1.md
 target/test_list/issues/new/task2.md
 "#
     );
+
+    //
+    // Test filtering by regex
+    //
 
     assert_output!(
         [
@@ -82,6 +91,10 @@ target/test_list/issues/new/task2.md
             "todo -l ^task$"
         ] => ""
     );
+
+    //
+    // Test filtering hidden issues
+    //
 
     create_file!("target/test_list/issues/.fin/task0.md", "");
     create_file!("target/test_list/issues/.task3.md", "");
