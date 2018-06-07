@@ -40,18 +40,21 @@ impl Cmd {
         settings: &Settings,
     ) -> Result<(), Error> {
         let mut cmd: Box<Command>;
+        let issue = Issue::<String>::default().setup(settings);
 
         if self.name == Cmd::NEW.name {
             cmd = Box::new(
                 New {
                     create: Some(Create::default().setup(settings)),
-                    issue: Issue::<String>::default().setup(settings),
+                    issue,
                 }.setup(&settings),
             );
         } else if self.name == Cmd::LIST.name {
             cmd = Box::new(
-                List::new(Find::default().setup(settings))
-                    .setup(&settings)
+                List {
+                    find: Some(Find::default().setup(settings)),
+                    issue,
+                }.setup(&settings)
             );
         } else {
             return Err(TodoError::UnknownCommand {

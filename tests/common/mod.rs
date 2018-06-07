@@ -109,6 +109,8 @@ macro_rules! assert_output {
                 let outs: Vec<_> = $out.trim().split("\n").collect();
                 let stdouts: Vec<_> = stdout.trim().split("\n").collect();
 
+                assert_eq!(outs.len(), stdouts.len(), "\n  left: {:?}\n right: {:?}", outs, stdouts);
+
                 for out in outs.iter() {
                     assert!(stdouts.contains(out), "`{}` is not in {:?}", out, stdouts);
                 }

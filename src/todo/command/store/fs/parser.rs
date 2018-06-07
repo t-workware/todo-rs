@@ -1,7 +1,8 @@
-use failure::Error;
-use regex::Regex;
 use std::io::{BufRead, BufReader, Read};
 use std::str;
+use failure::Error;
+use regex::Regex;
+
 use todo::attrs::Attrs;
 
 pub struct AttrParser {
@@ -40,6 +41,7 @@ impl AttrParser {
         }
     }
 
+    #[allow(dead_code)]
     pub fn parse_and_set_attr<L>(&self, line: L, attrs: &mut Attrs) -> Option<String>
     where
         L: AsRef<str>,
@@ -74,7 +76,7 @@ impl AttrParser {
 
         while reader.read_until(b'\n', &mut buf)? != 0 {
             if buf.starts_with(&[b'#', b'[']) || !attr.is_empty() {
-                let mut parsed = false;
+                let mut in_progress = true;
                 for (i, &bch) in buf.iter().enumerate() {
                     match bch {
                         b'[' => {
@@ -85,18 +87,17 @@ impl AttrParser {
 
                             if open_brackets == 0 {
                                 attr += str::from_utf8(&buf[..(i + 1)])?;
-                                self.parse_attr(&attr)
-                                    .map(|parsed_attr| attrs.push(parsed_attr))
-                                    .ok_or_else(|| format_err!("Can't parse attr `{}`", attr))?;
+                                let _ = self.parse_attr(&attr)
+                                    .map(|parsed_attr| attrs.push(parsed_attr));
+                                in_progress = false;
                                 attr.clear();
-                                parsed = true;
                                 break;
                             }
                         }
                         _ => {}
                     }
                 }
-                if !parsed {
+                if in_progress {
                     attr += str::from_utf8(&buf)?;
                 }
             }

@@ -43,14 +43,17 @@ where
 
 impl Setup for fs::Create {
     fn setup(mut self, settings: &Settings) -> Self {
+
         self.attrs.set_attr_value(
             fs::CreateAttr::IssuesDir.key(),
             settings.store.fs.issues_dir.clone(),
         );
+
         self.attrs.set_attr_value(
             fs::CreateAttr::Format.key(),
             settings.store.fs.format.clone(),
         );
+
         self.attrs.set_attr_value(
             fs::CreateAttr::Ext.key(),
             settings.store.fs.ext.clone()
@@ -76,16 +79,24 @@ impl Setup for fs::Create {
 
 impl Setup for fs::Find {
     fn setup(mut self, settings: &Settings) -> Self {
+
         if settings.store.fs.find_all {
             self.attrs.set_attr_value(
                 fs::FindAttr::All.key(),
                 true.to_string()
             );
         }
+
         self.attrs.set_attr_value(
             fs::FindAttr::IssuesDir.key(),
             settings.store.fs.issues_dir.clone(),
         );
+
+        self.attrs.set_attr_value(
+            fs::FindAttr::Capture.key(),
+            settings.store.fs.capture.clone(),
+        );
+
         for (key, aliases) in &settings.store.fs.attrs {
             let _ = self.attrs.add_aliases(key.as_str(), aliases);
         }

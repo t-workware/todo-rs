@@ -1,10 +1,11 @@
 use std::fs;
 use std::io::Write;
 use std::path::Path;
+
 use todo::attrs::Attrs;
 use todo::command::store::fs::{AttrParser, Format, SequenceGenerator};
 use todo::command::store::Create as CanCreate;
-use todo::command::Command;
+use todo::command::{Command, IssueCommand};
 use todo::error::TodoError;
 use todo::issue::{Content, Issue};
 
@@ -83,7 +84,7 @@ impl Command for Create {
     }
 }
 
-impl CanCreate for Create {
+impl IssueCommand for Create {
     fn init_from<T: Content>(&mut self, issue: &Issue<T>) {
         let mut format = self.attrs
             .attr_value_as_str(CreateAttr::Format.key())
@@ -122,3 +123,5 @@ impl CanCreate for Create {
         }
     }
 }
+
+impl CanCreate for Create {}

@@ -148,4 +148,106 @@ target/test_list/issues/.task3.md
             "todo -l a:"
         ] => ""
     );
+
+    //
+    // Test filtering by issue attrs
+    //
+
+    create_file!("target/test_list/issues/task1.md", "#[ctx: test]\n#[allow: user]");
+    create_file!("target/test_list/issues/new/task2.md", "#[allow: user]\n#[ctx: test]");
+    create_file!("target/test_list/issues/set/A.3.some task.md", "#[ctx: some]\n#[allow: user]");
+    create_file!("target/test_list/issues/set/B.4.other task.md", "#[allow: root]\n#[ctx: some]");
+    create_file!("target/test_list/issues/.fin/task3.md", "\n#[ctx: test]\n");
+
+    assert_output!(
+        [
+            "todo list ctx:test",
+            "todo --list ctx:test",
+            "todo -l ctx:test"
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list ctx:some",
+            "todo --list ctx:some",
+            "todo -l ctx:some"
+        ] => r#"
+target/test_list/issues/set/A.3.some task.md
+target/test_list/issues/set/B.4.other task.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list ctx:test a:+",
+            "todo --list ctx:test all:t",
+            "todo -l ctx:test a:"
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+target/test_list/issues/.fin/task3.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list allow:user",
+            "todo --list allow:user",
+            "todo -l allow:user"
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+target/test_list/issues/set/A.3.some task.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list ctx:test allow:user",
+            "todo --list ctx:test allow:user",
+            "todo -l ctx:test allow:user"
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list allow:user top:\"\"",
+            "todo --list allow:user top:\"\"",
+            "todo -l allow:user t:\"\""
+        ] => r#"
+target/test_list/issues/task1.md
+target/test_list/issues/new/task2.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list allow:user top:A",
+            "todo --list allow:user top:A",
+            "todo -l allow:user t:A"
+        ] => r#"
+target/test_list/issues/set/A.3.some task.md
+"#
+    );
+
+    assert_output!(
+        [
+            "todo list allow:user top:A scope:B",
+            "todo --list allow:user top:A scope:B",
+            "todo -l allow:user t:A s:B"
+        ] => ""
+    );
+
+    delete_file!("target/test_list/issues/task1.md");
+    delete_file!("target/test_list/issues/new/task2.md");
+    delete_file!("target/test_list/issues/set/A.3.some task.md");
+    delete_file!("target/test_list/issues/set/B.4.other task.md");
+    delete_file!("target/test_list/issues/.fin/task3.md");
 }

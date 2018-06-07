@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map::Iter};
 use std::rc::Rc;
 
 use todo::error::TodoError;
@@ -69,6 +69,14 @@ impl Attrs {
         } else {
             Err(TodoError::KeyNotFound { key: key.to_string() })
         }
+    }
+
+    pub fn count(&self) -> usize {
+        self.attrs.len()
+    }
+
+    pub fn iter(&self) -> Iter<String, String> {
+        self.attrs.iter()
     }
 
     pub fn attr_value(&self, key: &str) -> Option<&String> {

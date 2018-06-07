@@ -4,6 +4,7 @@ use std::result::Result;
 use todo::command::store::Find;
 use todo::command::Command;
 use todo::error::TodoError;
+use todo::issue::Issue;
 
 #[derive(Clone, Debug, Default)]
 pub struct List<T>
@@ -11,30 +12,21 @@ where
     T: Find,
 {
     pub find: Option<T>,
-}
-
-impl<T> List<T>
-where
-    T: Find,
-{
-    pub fn new(find_command: T) -> List<T> {
-        List {
-            find: Some(find_command),
-        }
-    }
+    pub issue: Issue<String>,
 }
 
 impl<T> Command for List<T>
 where
     T: Find,
 {
-    fn set_param(&mut self, key: &str, value: String) -> Result<(), TodoError> {
-        if !key.is_empty() {
-            match key.to_lowercase().as_str() {
-                _ if self.find.is_some() => self.find.as_mut().unwrap().set_param(key, value)?,
-                _ => {
-                    return Err(TodoError::UnknownCommandParam { param: key.to_string() })
-                }
+    fn set_param(&mut self, param: &str, value: String) -> Result<(), TodoError> {
+        if !param.is_empty() {
+            let mut is_find_param = false;
+            if let Some(find) = self.find.as_mut() {
+                is_find_param = find.set_param(param, value.clone()).is_ok();
+            }
+            if !is_find_param {
+                self.issue.attrs.set_attr_value(param.to_lowercase().as_str(), value);
             }
         } else if let Some(find) = self.find.as_mut() {
             let default_key = find.default_param_key().to_string();
@@ -54,6 +46,7 @@ where
         let mut find =  mem::replace(&mut self.find, None)
             .expect("Find command not exist");
 
+        find.init_from(&self.issue);
         find.exec();
         self.find = Some(find);
     }

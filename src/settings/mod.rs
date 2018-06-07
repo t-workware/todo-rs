@@ -38,10 +38,16 @@ impl Default for Issue {
 pub struct FsStore {
     pub attrs: HashMap<String, Vec<String>>,
     pub format: String,
+    pub capture: String,
     pub find_all: bool,
     pub issues_dir: String,
     pub ext: String,
     pub id_generator: String,
+}
+
+impl FsStore {
+    const DEFAULT_FORMAT: Str = "{scope:/}{priority:.}{id:.}{name}{.:ext}";
+    const DEFAULT_CAPTURE: Str = r"^(?:(?P<scope>.+)/)?(?:(?P<priority>[^\.]+)\.)??(?:(?P<id>[^\.]+)\.)??(?P<name>[^\.]+)?(?:\.(?P<ext>[^\.]+))?$";
 }
 
 impl Default for FsStore {
@@ -50,7 +56,8 @@ impl Default for FsStore {
 
         FsStore {
             attrs,
-            format: "{scope:/}{priority:.}{id:.}{name}{.:ext}".to_string(),
+            format: Self::DEFAULT_FORMAT.to_string(),
+            capture: Self::DEFAULT_CAPTURE.to_string(),
             find_all: false,
             issues_dir: "issues".to_string(),
             ext: "md".to_string(),
