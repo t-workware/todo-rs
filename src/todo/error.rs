@@ -1,3 +1,5 @@
+#![allow(bare_trait_objects)]
+
 #[derive(Debug, Fail)]
 pub enum TodoError {
     #[fail(display = "unknown command `{}`", name)]

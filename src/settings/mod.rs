@@ -101,6 +101,32 @@ impl Default for SequenceGenerator {
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Operation {
+    pub lp: String,
+    pub rp: String,
+    pub or: String,
+    pub and: String,
+    pub not: String,
+}
+
+impl Default for Operation {
+    fn default() -> Self {
+        Operation {
+            lp: "(".to_string(),
+            rp: ")".to_string(),
+            or: ",".to_string(),
+            and: "+".to_string(),
+            not: "^".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct Cli {
+    pub operation: Operation,
+}
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct NewCommand {
     pub default_attrs: Option<HashMap<String, String>>,
@@ -116,6 +142,7 @@ pub struct Settings {
     pub debug: bool,
     pub issue: Issue,
     pub store: Store,
+    pub cli: Cli,
     pub command: Command,
     pub generator: Generator,
 }

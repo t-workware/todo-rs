@@ -39,7 +39,7 @@ impl Cmd {
         name: &str,
         settings: &Settings,
     ) -> Result<(), Error> {
-        let mut cmd: Box<Command>;
+        let mut cmd: Box<dyn Command>;
         let issue = Issue::<String>::default().setup(settings);
 
         if self.name == Cmd::NEW.name {

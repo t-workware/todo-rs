@@ -1,3 +1,5 @@
+#![warn(bare_trait_objects)]
+
 extern crate clap;
 extern crate config;
 extern crate regex;
@@ -9,6 +11,8 @@ extern crate enum_iterator_derive;
 #[macro_use]
 extern crate failure;
 extern crate walkdir;
+#[macro_use]
+extern crate nom;
 
 use clap::{App, Arg, SubCommand};
 use cmd::Cmd;
@@ -16,6 +20,7 @@ use lang::Str;
 use settings::Settings;
 
 mod cmd;
+mod expr;
 mod lang;
 mod settings;
 mod todo;
